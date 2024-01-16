@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: ChatLootBidder
+## Version: 1.0.0
+## Notes:
+## Author: TrumpetX
+## SavedVariables: ChatLootBidder_Store
+
+ChatLootBidder.lua
