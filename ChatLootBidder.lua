@@ -96,6 +96,11 @@ local ShowInfo = function()
   end
 end
 
+local function IsStaticChannel(channel)
+  channel = channel == nil and nil or string.upper(channel)
+  return channel == "RAID" or channel == "RAID_WARNING" or channel == "SAY" or channel == "EMOTE" or channel == "PARTY" or channel == "GUILD" or channel == "OFFICER"
+end
+
 local function IsTableEmpty(table)
   local next = next
   return next(table) == nil
@@ -113,9 +118,22 @@ local function GetKeysSortedByValue(tbl)
   return keys
 end
 
+local function SendToChatChannel(channel, message)
+  if IsStaticChannel(channel) then
+    SendChatMessage(message, channel)
+  else
+    local channelIndex = GetChannelName(channel)
+    if channelIndex > 0 then
+      SendChatMessage(message, "CHANNEL", "Common", channelIndex)
+    else
+      Error(channel .. " <Not In Channel> " .. message)
+    end
+  end
+end
+
 local function MessageBidSummaryChannel(message, force)
   if ChatLootBidder_Store.BidSummary or force then
-    SendChatMessage(message, ChatLootBidder_Store.BidChannel)
+    SendToChatChannel(ChatLootBidder_Store.BidChannel, message)
     Trace("<SUMMARY>" .. message)
   else
     Debug("<SUMMARY>" .. message)
@@ -124,20 +142,20 @@ end
 
 local function MessageBidChannel(message)
   if ChatLootBidder_Store.BidAnnounce then
-    SendChatMessage(message, ChatLootBidder_Store.BidChannel)
-    Trace("<BID> " .. message)
+    SendToChatChannel(ChatLootBidder_Store.BidChannel, message)
+    Trace("<BID>" .. message)
   else
-    Debug("<BID> " .. message)
+    Debug("<BID>" .. message)
   end
 end
 
 local function MessageWinnerChannel(message)
-  SendChatMessage(message, ChatLootBidder_Store.WinnerAnnounceChannel)
+  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message)
   Trace("<WIN>" .. message)
 end
 
 local function MessageStartChannel(message)
-  SendChatMessage(message, ChatLootBidder_Store.SessionAnnounceChannel)
+  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message)
   Trace("<START>" .. message)
 end
 
