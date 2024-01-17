@@ -25,7 +25,7 @@ ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
 ChatLootBidder_Store.SessionAnnounceChannel = ChatLootBidder_Store.SessionAnnounceChannel or "RAID"
 ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
 ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
-ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 0
+ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
 
 local function Error(message)
 	DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff" .. chatPrefix .. "|cffff0000 "..message)
@@ -60,6 +60,7 @@ local ShowHelp = function()
   Message("/loot bid [channel]  - Set the channel for bids and/or summaries")
   Message("/loot session [channel]  - Set the channel for session start")
   Message("/loot win [channel]  - Set the channel for win announcements")
+  Message("/loot timer #seconds  - Seconds for a BigWigs loot timer bar")
 	Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
 	Message(addonNotes .. " for bugs and suggestions")
 	Message("Written by " .. addonAuthor)
@@ -75,6 +76,7 @@ local ShowInfo = function()
   Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
+  Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
 	Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel)
   if ChatLootBidder_Store.DebugLevel > 1 then
     Trace("Session: " .. (session == nil and "None" or ""))
@@ -245,6 +247,7 @@ local Start = function(items)
   end
   MessageStartChannel("==================")
   MessageStartChannel("/w " .. me .. " [item_link] ms/os/roll bid# optional_note")
+  if BigWigs and ChatLootBidder_Store.TimerSeconds > 0 then BWCB(ChatLootBidder_Store.TimerSeconds, "Bidding Ends") end
 end
 
 local InitSlashCommands = function()
@@ -260,6 +263,9 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = tonumber(commandlist[2] or "0") or 0
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
+    elseif commandlist[1] == "timer" then
+      ChatLootBidder_Store.TimerSeconds = tonumber(commandlist[2] or "0") or 0
+      Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
     elseif commandlist[1] == "bid" then
       if commandlist[2] == nil then
         ChatLootBidder_Store.BidAnnounce = not ChatLootBidder_Store.BidAnnounce
