@@ -13,7 +13,7 @@ local upgradeMessageShown = false
 local loginchannels = { "BATTLEGROUND", "RAID", "GUILD" }
 local groupchannels = { "BATTLEGROUND", "RAID" }
 local me = UnitName("player")
-local itemRegex = "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%-?%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?"
+local itemRegex = "|c.-|H.-|h|r"
 ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
@@ -31,8 +31,12 @@ local function LoadVariables()
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 0
 end
 
-local function ToWholeNumber(numberString)
-  return math.max(math.floor(tonumber(numberString or "0") or 0), 0)
+local function ToWholeNumber(numberString, default)
+  if default == nil then default = 0 end
+  if numberString == nil then return default end
+  local num = math.floor(tonumber(numberString) or default)
+  if default == num then return default end
+  return math.max(num, 0)
 end
 
 local function Error(message)
@@ -57,7 +61,7 @@ end
 
 local ShowHelp = function()
 	Message("/loot info  - Show current settings")
-	Message("/loot start [itm1] [itm2]  - Start a session for item(s)")
+	Message("/loot start [itm1] [itm2] [#timer_optional] - Start a session for item(s)")
   Message("/loot end  - End a loot session and announce winner(s)")
   Message("/loot clear  - Clears a current loot session")
   Message("/loot summary  - Post the summary")
@@ -66,7 +70,7 @@ local ShowHelp = function()
   Message("/loot bid [channel]  - Set the channel for bids and/or summaries")
   Message("/loot session [channel]  - Set the channel for session start")
   Message("/loot win [channel]  - Set the channel for win announcements")
-  Message("/loot timer #seconds  - Seconds for a BigWigs loot timer bar")
+  Message("/loot timer #seconds  - Seconds for a BigWigs default loot timer bar")
   Message("/loot maxbid #number  - The maximum bid allowed to be considered valid")
 	Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
 	Message(addonNotes .. " for bugs and suggestions")
@@ -83,7 +87,7 @@ local ShowInfo = function()
   Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
-  Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
+  Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
   Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
 	Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel)
   if ChatLootBidder_Store.DebugLevel > 1 then
@@ -169,7 +173,7 @@ local function MessageStartChannel(message)
   Trace("<START>" .. message)
 end
 
-local BidSummary = function(announceWinners)
+local function BidSummary(announceWinners)
   for item,itemSession in pairs(session) do
     MessageBidSummaryChannel(item)
     local ms = itemSession["ms"]
@@ -223,14 +227,14 @@ local BidSummary = function(announceWinners)
   end
 end
 
-local End = function()
+local function End()
   BidSummary(true)
   session = nil
 end
 
 local function GetItemLinks(str, start)
   local itemLinks = {}
-  local _start, _end = 0, -1
+  local _start, _end = nil, -1
   while true do
     _start, _end = string.find(str, itemRegex, _end + 1)
     if _start == nil then
@@ -240,12 +244,13 @@ local function GetItemLinks(str, start)
   end
 end
 
-local Start = function(items)
+local function Start(items, timer)
   if session ~= nil then End() end
+  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on") end
   session = {}
-  MessageStartChannel("==================")
+  MessageStartChannel("-----------")
   MessageStartChannel("Bid on the following items")
-  MessageStartChannel("==================")
+  MessageStartChannel("-----------")
   for k,i in pairs(items) do
     MessageStartChannel(i)
     session[i] = {}
@@ -253,9 +258,10 @@ local Start = function(items)
     session[i]["os"] = {}
     session[i]["roll"] = {}
   end
-  MessageStartChannel("==================")
-  MessageStartChannel("/w " .. me .. " [item_link] ms/os/roll bid# optional_note")
-  if BigWigs and ChatLootBidder_Store.TimerSeconds > 0 then BWCB(ChatLootBidder_Store.TimerSeconds, "Bidding Ends") end
+  MessageStartChannel("-----------")
+  MessageStartChannel("/w " .. "\124cffffffff\124Hplayer:" .. me .. "\124h" .. me .. "\124h\124r" .. " [item-link] ms/os/roll #bid [optional-note]")
+  if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
+  if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
 end
 
 local InitSlashCommands = function()
@@ -273,7 +279,7 @@ local InitSlashCommands = function()
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
     elseif commandlist[1] == "timer" then
       ChatLootBidder_Store.TimerSeconds = ToWholeNumber(commandlist[2])
-      Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
+      Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
     elseif commandlist[1] == "timer" then
       ChatLootBidder_Store.MaxBid = math.max(ToWholeNumber(commandlist[2]), 1)
       Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
@@ -316,13 +322,9 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "summary" then
       BidSummary()
     elseif commandlist[1] == "start" then
-      table.remove(commandlist, 1)
       local itemLinks = GetItemLinks(table.concat(commandlist, " "))
-      if IsTableEmpty(itemLinks) then
-        Error("You must provide at least a single item to bid on")
-      else
-        Start(itemLinks)
-      end
+      local optionalTimer = ToWholeNumber(commandlist[getn(commandlist)], -1)
+      Start(itemLinks, optionalTimer)
     elseif commandlist[1] == "summary" then
       BidSummary()
 		end
