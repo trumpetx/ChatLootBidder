@@ -18,14 +18,16 @@ ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
 
-ChatLootBidder_Store = ChatLootBidder_Store or {}
-ChatLootBidder_Store.BidAnnounce = ChatLootBidder_Store.BidAnnounce or false
-ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary or true
-ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
-ChatLootBidder_Store.SessionAnnounceChannel = ChatLootBidder_Store.SessionAnnounceChannel or "RAID"
-ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
-ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
-ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
+local function LoadVariables()
+  ChatLootBidder_Store = ChatLootBidder_Store or {}
+  ChatLootBidder_Store.BidAnnounce = ChatLootBidder_Store.BidAnnounce or false
+  ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary or true
+  ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
+  ChatLootBidder_Store.SessionAnnounceChannel = ChatLootBidder_Store.SessionAnnounceChannel or "RAID"
+  ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
+  ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
+  ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
+end
 
 local function Error(message)
 	DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff" .. chatPrefix .. "|cffff0000 "..message)
@@ -76,11 +78,11 @@ local ShowInfo = function()
   Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
-  Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
+  Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
 	Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel)
   if ChatLootBidder_Store.DebugLevel > 1 then
     Trace("Session: " .. (session == nil and "None" or ""))
-    for k,v in pairs(session) do
+    for k,v in pairs(session or {}) do
       Trace("  " .. k)
       Trace("  MS")
       for k2,v2 in pairs(session[k]["ms"]) do
@@ -422,10 +424,14 @@ function ChatFrame_OnEvent(event)
 end
 
 ChatLootBidderFrame = CreateFrame("Frame")
+ChatLootBidderFrame:RegisterEvent("ADDON_LOADED")
 ChatLootBidderFrame:RegisterEvent("CHAT_MSG_ADDON")
 ChatLootBidderFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 ChatLootBidderFrame:SetScript("OnEvent", function()
-	if event == "CHAT_MSG_ADDON" and arg1 == shortName then
+  if event == "ADDON_LOADED" and arg1 == "ChatLootBidder" then
+      LoadVariables()
+      InitSlashCommands()
+	elseif event == "CHAT_MSG_ADDON" and arg1 == shortName then
 		Trace("Received: " .. arg2)
 		local message = ParseMessage(arg2)
     if message["version"] ~= nil then
@@ -439,12 +445,9 @@ ChatLootBidderFrame:SetScript("OnEvent", function()
 			end
 		end
 		this.currentGroupSize = groupSize
-	end
-  if event == "PLAYER_ENTERING_WORLD" then
+	elseif event == "PLAYER_ENTERING_WORLD" then
 		for _, chan in pairs(loginchannels) do
 			SendVersionMessage(chan)
 		end
 	end
 end)
-
-InitSlashCommands()
