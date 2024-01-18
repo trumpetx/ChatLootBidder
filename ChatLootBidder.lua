@@ -27,6 +27,12 @@ local function LoadVariables()
   ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
   ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
   ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
+  ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
+  ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 0
+end
+
+local function ToWholeNumber(numberString)
+  return math.max(math.floor(tonumber(numberString or "0") or 0), 0)
 end
 
 local function Error(message)
@@ -50,19 +56,18 @@ local function Trace(message)
 end
 
 local ShowHelp = function()
-	Message("/loot help  - Show this message!")
 	Message("/loot info  - Show current settings")
 	Message("/loot start [itm1] [itm2]  - Start a session for item(s)")
   Message("/loot end  - End a loot session and announce winner(s)")
   Message("/loot clear  - Clears a current loot session")
   Message("/loot summary  - Post the summary")
-	Message("/loot info  - Show current settings")
   Message("/loot bid  - Toggle incoming bid announcements")
   Message("/loot summary  - Toggle bid summary announcements")
   Message("/loot bid [channel]  - Set the channel for bids and/or summaries")
   Message("/loot session [channel]  - Set the channel for session start")
   Message("/loot win [channel]  - Set the channel for win announcements")
   Message("/loot timer #seconds  - Seconds for a BigWigs loot timer bar")
+  Message("/loot maxbid #number  - The maximum bid allowed to be considered valid")
 	Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
 	Message(addonNotes .. " for bugs and suggestions")
 	Message("Written by " .. addonAuthor)
@@ -79,6 +84,7 @@ local ShowInfo = function()
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
   Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
+  Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
 	Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel)
   if ChatLootBidder_Store.DebugLevel > 1 then
     Trace("Session: " .. (session == nil and "None" or ""))
@@ -263,11 +269,14 @@ local InitSlashCommands = function()
     if commandlist[1] == nil or commandlist[1] == "help" then
 			ShowHelp()
     elseif commandlist[1] == "debug" then
-      ChatLootBidder_Store.DebugLevel = tonumber(commandlist[2] or "0") or 0
+      ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
     elseif commandlist[1] == "timer" then
-      ChatLootBidder_Store.TimerSeconds = tonumber(commandlist[2] or "0") or 0
+      ChatLootBidder_Store.TimerSeconds = ToWholeNumber(commandlist[2])
       Message("BigWigs timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
+    elseif commandlist[1] == "timer" then
+      ChatLootBidder_Store.MaxBid = math.max(ToWholeNumber(commandlist[2]), 1)
+      Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
     elseif commandlist[1] == "bid" then
       if commandlist[2] == nil then
         ChatLootBidder_Store.BidAnnounce = not ChatLootBidder_Store.BidAnnounce
@@ -384,12 +393,18 @@ function ChatFrame_OnEvent(event)
 		end
     local bidder = arg2
     local tier = bid[1] and string.lower(bid[1]) or nil
-    local amt = tonumber(bid[2] or "0") or 0
+    local amt = ToWholeNumber(bid[2])
     if item ~= nil and (tier == "ms" or tier == "os" or tier == "roll") then
       local itemSession = session[item]
       if itemSession == nil then
         local invalidBid = "There is no active loot session for " .. item .. "."
         MessageBidChannel(invalidBid .. "  <" .. arg2 .. "> " .. arg1)
+        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        return
+      end
+      if amt > ChatLootBidder_Store.MaxBid then
+        local invalidBid = "Bid for " .. item .. " is too large, the maxiumum accepted bid is: " .. ChatLootBidder_Store.MaxBid
+        MessageBidChannel("<" .. arg2 .. "> " .. invalidBid)
         SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
         return
       end
