@@ -395,6 +395,14 @@ local function IsValidTier(tier)
   return tier == "ms" or tier == "os" or tier == "roll" or tier == "cancel"
 end
 
+local function SendResponse(message, bidder)
+  if bidder == me then
+    Message(message)
+  else
+    SendChatMessage(message, "WHISPER", "Common", bidder)
+  end
+end
+
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
     _start, _end = string.find(arg1, itemRegex, 0)
@@ -405,7 +413,7 @@ function ChatFrame_OnEvent(event)
       local itemSession = session[item]
       if itemSession == nil then
         local invalidBid = "There is no active loot session for " .. item
-        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        SendResponse(invalidBid, bidder)
         return
       end
       local mainSpec = itemSession["ms"]
@@ -430,19 +438,19 @@ function ChatFrame_OnEvent(event)
         amt = ToWholeNumber(oldTier)
       else
         local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
-        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        SendResponse(invalidBid, bidder)
         return
       end
       if tier == "cancel" then
         local cancelBid = "Bid canceled for " .. item
         cancel[bidder] = true
         MessageBidChannel("<" .. bidder .. "> " .. cancelBid)
-        SendChatMessage(cancelBid, "WHISPER", "Common", bidder)
+        SendResponse(cancelBid, bidder)
         return
       end
       if amt > ChatLootBidder_Store.MaxBid then
         local invalidBid = "Bid for " .. item .. " is too large, the maxiumum accepted bid is: " .. ChatLootBidder_Store.MaxBid
-        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        SendResponse(invalidBid, bidder)
         return
       end
       -- If they had previously canceled, remove them and allow the new bid to continue
@@ -450,14 +458,14 @@ function ChatFrame_OnEvent(event)
       if tier == "roll" then
         if roll[bidder] ~= nil then
           MessageBidChannel("Duplicate ROLL bid received from " .. bidder .. " for " .. item .. "; keeping current roll of " .. roll[bidder] .. ".")
-          SendChatMessage("Your roll of " .. roll[bidder] .. " has already been recorded", "WHISPER", "Common", bidder)
+          SendResponse("Your roll of " .. roll[bidder] .. " has already been recorded", bidder)
           return
         end
         amt = math.random(1, 100)
       else
         if amt < 1 then
           local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
-          SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+          SendResponse(invalidBid, bidder)
           return
         end
         -- remove amount from the table for note concat
@@ -472,7 +480,7 @@ function ChatFrame_OnEvent(event)
       if tier == "roll" then roll[bidder] = amt; received = "Roll of " end
       received = received .. amt .. " received for " .. item .. (note == "" and "" or " [ " .. note .. " ]")
       MessageBidChannel("<" .. bidder .. "> " .. received)
-      SendChatMessage(received, "WHISPER", "Common", bidder)
+      SendResponse(received, bidder)
       return
     end
   end
