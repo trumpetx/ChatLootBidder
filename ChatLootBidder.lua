@@ -183,47 +183,43 @@ local function BidSummary(announceWinners)
     local winner = {}
     local winnerBid = nil
     local winnerTier = nil
-    if not IsTableEmpty(cancel) then
-      for bidder,v in pairs(cancel) do
-        -- MS and OS bids should already be removed, but rolls were kept for preserving the roles in case of a re-bid: clear them all
-        ms[bidder] = nil
-        ofs[bidder] = nil
-        roll[bidder] = nil
-      end
-    end
+    local header = true
     if not IsTableEmpty(ms) then
       local sortedMainspecKeys = GetKeysSortedByValue(ms)
-      MessageBidSummaryChannel("- Main Spec:")
       for k,bidder in pairs(sortedMainspecKeys) do
-        local bid = ms[bidder]
-        if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
-        elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
-        -- Remove offspec and roll bids if they also MS bid
-        ofs[bidder] = nil
-        roll[bidder] = nil
-        MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        if cancel[bidder] == nil then
+          if header then MessageBidSummaryChannel("- Main Spec:") else header = false end
+          local bid = ms[bidder]
+          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
+          elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
+          MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        end
       end
     end
+    header = true
     if not IsTableEmpty(ofs) then
       local sortedOffspecKeys = GetKeysSortedByValue(ofs)
-      MessageBidSummaryChannel("- Off Spec:")
       for k,bidder in pairs(sortedOffspecKeys) do
-        local bid = ofs[bidder]
-        if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
-        elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
-        -- Remove roll bids if they also OS bid
-        roll[bidder] = nil
-        MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        if cancel[bidder] == nil and ms[bidder] == nil then
+          if header then MessageBidSummaryChannel("- Off Spec:") else header = false end
+          local bid = ofs[bidder]
+          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
+          elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
+          MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        end
       end
     end
+    header = true
     if not IsTableEmpty(roll) then
-      MessageBidSummaryChannel("- Rolls:")
       local sortedRollKeys = GetKeysSortedByValue(roll)
       for k,bidder in pairs(sortedRollKeys) do
-        local bid = roll[bidder]
-        if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
-        elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
-        MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil then
+          if header then MessageBidSummaryChannel("- Rolls:") else header = false end
+          local bid = roll[bidder]
+          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
+          elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
+          MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
+        end
       end
     end
     if IsTableEmpty(winner) and announceWinners then
