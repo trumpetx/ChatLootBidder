@@ -438,6 +438,8 @@ function ChatFrame_OnEvent(event)
       if tier == "cancel" then
         local cancelBid = "Bid canceled for " .. item
         cancel[bidder] = true
+        mainSpec[bidder] = nil
+        offSpec[bidder] = nil
         MessageBidChannel("<" .. bidder .. "> " .. cancelBid)
         SendResponse(cancelBid, bidder)
         return
@@ -469,9 +471,24 @@ function ChatFrame_OnEvent(event)
       table.remove(bid, 1)
       local note = table.concat(bid, " ")
       local received
-      if tier == "ms" then mainSpec[bidder] = amt; received = "Main Spec bid of " end
-      if tier == "os" then offSpec[bidder] = amt; received = "Off Spec bid of " end
-      if tier == "roll" then roll[bidder] = amt; received = "Roll of " end
+      if tier == "ms" then
+        mainSpec[bidder] = amt
+        received = "Main Spec bid of "
+      elseif mainSpec[bidder] ~= nil then
+        local invalidBid = "You already have a MS bid of " .. mainSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
+        SendResponse(invalidBid, bidder)
+        return
+      elseif tier == "os" then
+        offSpec[bidder] = amt
+        received = "Off Spec bid of "
+      elseif offSpec[bidder] ~= nil then
+        local invalidBid = "You already have an OS bid of " .. offSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
+        SendResponse(invalidBid, bidder)
+        return
+      elseif tier == "roll" then
+        roll[bidder] = amt
+        received = "Roll of "
+      end
       received = received .. amt .. " received for " .. item .. (note == "" and "" or " [ " .. note .. " ]")
       MessageBidChannel("<" .. bidder .. "> " .. received)
       SendResponse(received, bidder)
