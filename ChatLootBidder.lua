@@ -188,7 +188,7 @@ local function BidSummary(announceWinners)
       local sortedMainspecKeys = GetKeysSortedByValue(ms)
       for k,bidder in pairs(sortedMainspecKeys) do
         if cancel[bidder] == nil then
-          if header then MessageBidSummaryChannel("- Main Spec:") else header = false end
+          if header then MessageBidSummaryChannel("- Main Spec:"); header = false end
           local bid = ms[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
           elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
@@ -201,7 +201,7 @@ local function BidSummary(announceWinners)
       local sortedOffspecKeys = GetKeysSortedByValue(ofs)
       for k,bidder in pairs(sortedOffspecKeys) do
         if cancel[bidder] == nil and ms[bidder] == nil then
-          if header then MessageBidSummaryChannel("- Off Spec:") else header = false end
+          if header then MessageBidSummaryChannel("- Off Spec:"); header = false end
           local bid = ofs[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
           elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
@@ -214,7 +214,7 @@ local function BidSummary(announceWinners)
       local sortedRollKeys = GetKeysSortedByValue(roll)
       for k,bidder in pairs(sortedRollKeys) do
         if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil then
-          if header then MessageBidSummaryChannel("- Rolls:") else header = false end
+          if header then MessageBidSummaryChannel("- Rolls:"); header = false end
           local bid = roll[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
           elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
