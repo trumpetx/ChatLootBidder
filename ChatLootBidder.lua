@@ -64,9 +64,9 @@ local ShowHelp = function()
 	Message("/loot start [itm1] [itm2] [#timer_optional] - Start a session for item(s)")
   Message("/loot end  - End a loot session and announce winner(s)")
   Message("/loot clear  - Clears a current loot session")
-  Message("/loot summary  - Post the summary")
+  Message("/loot summary  - Post the current loot session summary to the bid channel")
   Message("/loot bid  - Toggle incoming bid announcements")
-  Message("/loot summary  - Toggle bid summary announcements")
+  Message("/loot endsummary  - Toggle bid summary announcements")
   Message("/loot bid [channel]  - Set the channel for bids and/or summaries")
   Message("/loot session [channel]  - Set the channel for session start")
   Message("/loot win [channel]  - Set the channel for win announcements")
@@ -83,7 +83,7 @@ end
 
 local ShowInfo = function()
   Message("Bid announcing is " .. TrueOnOff(ChatLootBidder_Store.BidAnnounce))
-  Message("Bid summary is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
+  Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
   Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
@@ -301,9 +301,9 @@ local InitSlashCommands = function()
         ChatLootBidder_Store.BidChannel = commandlist[2]
         Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
       end
-    elseif commandlist[1] == "summary" then
+    elseif commandlist[1] == "endsummary" then
       ChatLootBidder_Store.BidSummary = not ChatLootBidder_Store.BidSummary
-      Message("Bid summary is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
+      Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
     elseif commandlist[1] == "session" then
       if commandlist[2] == nil then
         Error("A channel name (like SAY, RAID, RAID_WARNING, etc) must be provided")
@@ -335,8 +335,6 @@ local InitSlashCommands = function()
       local itemLinks = GetItemLinks(table.concat(commandlist, " "))
       local optionalTimer = ToWholeNumber(commandlist[getn(commandlist)], -1)
       Start(itemLinks, optionalTimer)
-    elseif commandlist[1] == "summary" then
-      BidSummary()
 		end
   end
 end
