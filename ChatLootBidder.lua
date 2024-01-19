@@ -179,9 +179,18 @@ local function BidSummary(announceWinners)
     local ms = itemSession["ms"]
     local ofs = itemSession["os"]
     local roll = itemSession["roll"]
+    local cancel = itemSession["cancel"]
     local winner = {}
     local winnerBid = nil
     local winnerTier = nil
+    if not IsTableEmpty(cancel) then
+      for bidder,v in pairs(cancel) do
+        -- MS and OS bids should already be removed, but rolls were kept for preserving the roles in case of a re-bid: clear them all
+        ms[bidder] = nil
+        ofs[bidder] = nil
+        roll[bidder] = nil
+      end
+    end
     if not IsTableEmpty(ms) then
       local sortedMainspecKeys = GetKeysSortedByValue(ms)
       MessageBidSummaryChannel("- Main Spec:")
@@ -190,8 +199,8 @@ local function BidSummary(announceWinners)
         if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
         elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
         -- Remove offspec and roll bids if they also MS bid
-        if ofs[bidder] ~= nil then table.remove(ofs, bidder) end
-        if roll[bidder] ~= nil then table.remove(roll, bidder) end
+        ofs[bidder] = nil
+        roll[bidder] = nil
         MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
       end
     end
@@ -203,7 +212,7 @@ local function BidSummary(announceWinners)
         if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
         elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
         -- Remove roll bids if they also OS bid
-        if roll[bidder] ~= nil then table.remove(roll, bidder) end
+        roll[bidder] = nil
         MessageBidSummaryChannel("-- " .. bidder .. ": " .. bid)
       end
     end
@@ -257,6 +266,7 @@ local function Start(items, timer)
     session[i]["ms"] = {}
     session[i]["os"] = {}
     session[i]["roll"] = {}
+    session[i]["cancel"] = {}
   end
   MessageStartChannel("-----------")
   MessageStartChannel("/w " .. "\124cffffffff\124Hplayer:" .. me .. "\124h" .. me .. "\124h\124r" .. " [item-link] ms/os/roll #bid [optional-note]")
@@ -381,38 +391,62 @@ local function HandleVersionMessage(message)
   end
 end
 
+local function IsValidTier(tier)
+  return tier == "ms" or tier == "os" or tier == "roll" or tier == "cancel"
+end
+
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
     _start, _end = string.find(arg1, itemRegex, 0)
-    local item
     if _start ~= nil then
-      item = string.sub(arg1, _start, _end)
-    end
-    local bidString = _end == nil and arg1 or string.sub(arg1, _end + 1)
-    local bid = {}
-		for word in gfind(bidString, "[^ ]+") do
-			table.insert(bid, word)
-		end
-    local bidder = arg2
-    local tier = bid[1] and string.lower(bid[1]) or nil
-    local amt = ToWholeNumber(bid[2])
-    if item ~= nil and (tier == "ms" or tier == "os" or tier == "roll") then
+      local bidder = arg2
+
+      local item = string.sub(arg1, _start, _end)
       local itemSession = session[item]
       if itemSession == nil then
-        local invalidBid = "There is no active loot session for " .. item .. "."
-        MessageBidChannel(invalidBid .. "  <" .. arg2 .. "> " .. arg1)
-        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
-        return
-      end
-      if amt > ChatLootBidder_Store.MaxBid then
-        local invalidBid = "Bid for " .. item .. " is too large, the maxiumum accepted bid is: " .. ChatLootBidder_Store.MaxBid
-        MessageBidChannel("<" .. arg2 .. "> " .. invalidBid)
+        local invalidBid = "There is no active loot session for " .. item
         SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
         return
       end
       local mainSpec = itemSession["ms"]
       local offSpec = itemSession["os"]
       local roll = itemSession["roll"]
+      local cancel = itemSession["cancel"]
+
+      local bidString = _end == nil and arg1 or string.sub(arg1, _end + 1)
+      local bid = {}
+      for word in gfind(bidString, "[^ ]+") do
+        table.insert(bid, word)
+      end
+      local tier = bid[1] and string.lower(bid[1]) or nil
+      local amt = bid[2] and string.lower(bid[2]) or nil
+
+      if IsValidTier(tier) then
+        amt = ToWholeNumber(amt)
+      elseif IsValidTier(amt) then
+        -- The bidder mixed up the ms ## to ## ms, handle the mixup
+        local oldTier = tier
+        tier = amt;
+        amt = ToWholeNumber(oldTier)
+      else
+        local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
+        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        return
+      end
+      if tier == "cancel" then
+        local cancelBid = "Bid canceled for " .. item
+        cancel[bidder] = true
+        MessageBidChannel("<" .. bidder .. "> " .. cancelBid)
+        SendChatMessage(cancelBid, "WHISPER", "Common", bidder)
+        return
+      end
+      if amt > ChatLootBidder_Store.MaxBid then
+        local invalidBid = "Bid for " .. item .. " is too large, the maxiumum accepted bid is: " .. ChatLootBidder_Store.MaxBid
+        SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+        return
+      end
+      -- If they had previously canceled, remove them and allow the new bid to continue
+      cancel[bidder] = nil
       if tier == "roll" then
         if roll[bidder] ~= nil then
           MessageBidChannel("Duplicate ROLL bid received from " .. bidder .. " for " .. item .. "; keeping current roll of " .. roll[bidder] .. ".")
@@ -421,20 +455,25 @@ function ChatFrame_OnEvent(event)
         end
         amt = math.random(1, 100)
       else
+        if amt < 1 then
+          local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
+          SendChatMessage(invalidBid, "WHISPER", "Common", bidder)
+          return
+        end
+        -- remove amount from the table for note concat
         table.remove(bid, 2)
       end
+      -- remove tier from the table for note concat
       table.remove(bid, 1)
-      if amt > 0 then
-        local note = table.concat(bid, " ")
-        local received
-        if tier == "ms" then mainSpec[bidder] = amt; received = "Main Spec bid of " end
-        if tier == "os" then offSpec[bidder] = amt; received = "Off Spec bid of " end
-        if tier == "roll" then roll[bidder] = amt; received = "Roll of " end
-        received = received .. amt .. " received for " .. item .. (note == "" and "" or " [ " .. note .. " ]")
-        MessageBidChannel(received)
-        SendChatMessage(received, "WHISPER", "Common", bidder)
-        return
-      end
+      local note = table.concat(bid, " ")
+      local received
+      if tier == "ms" then mainSpec[bidder] = amt; received = "Main Spec bid of " end
+      if tier == "os" then offSpec[bidder] = amt; received = "Off Spec bid of " end
+      if tier == "roll" then roll[bidder] = amt; received = "Roll of " end
+      received = received .. amt .. " received for " .. item .. (note == "" and "" or " [ " .. note .. " ]")
+      MessageBidChannel("<" .. bidder .. "> " .. received)
+      SendChatMessage(received, "WHISPER", "Common", bidder)
+      return
     end
   end
 	ChatLootBidder_ChatFrame_OnEvent(event);
