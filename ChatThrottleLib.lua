@@ -23,7 +23,7 @@
 
 --
 -- ChangeLog and notes for this version:
--- There is no historic CTL version 14 and this would supersceed all other Vanilla era
+-- There is no historic CTL version 14 and this would supersede all other Vanilla era
 -- versions (<=13) while also not stepping on private server TBC versions (15+)
 --
 -- Modifications for this version are simply to throttle raw chat lines per second and
