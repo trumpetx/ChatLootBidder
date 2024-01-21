@@ -132,13 +132,13 @@ local function GetKeysSortedByValue(tbl)
   return keys
 end
 
-local function SendToChatChannel(channel, message)
+local function SendToChatChannel(channel, message, prio)
   if IsStaticChannel(channel) then
-    SendChatMessage(message, channel)
+    ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, channel)
   else
     local channelIndex = GetChannelName(channel)
     if channelIndex > 0 then
-      SendChatMessage(message, "CHANNEL", "Common", channelIndex)
+      ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, "CHANNEL", nil, channelIndex)
     else
       Error(channel .. " <Not In Channel> " .. message)
     end
@@ -164,12 +164,12 @@ local function MessageBidChannel(message)
 end
 
 local function MessageWinnerChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message)
+  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "ALERT")
   Trace("<WIN>" .. message)
 end
 
 local function MessageStartChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message)
+  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message, "NORMAL")
   Trace("<START>" .. message)
 end
 
@@ -338,7 +338,7 @@ end
 local function SendVersionMessage(chan)
 	local msg = "sender=" .. me .. ",version=" .. addonVersion
 	Trace("Sent: " .. msg)
-	SendAddonMessage(shortName, msg, chan)
+	ChatThrottleLib:SendAddonMessage("BULK", shortName, msg, chan)
 end
 
 --pfUI.api.strsplit
@@ -393,7 +393,7 @@ local function SendResponse(message, bidder)
   if bidder == me then
     Message(message)
   else
-    SendChatMessage(message, "WHISPER", nil, bidder)
+    ChatThrottleLib:SendChatMessage("ALERT", shortName, message, "WHISPER", nil, bidder)
   end
 end
 

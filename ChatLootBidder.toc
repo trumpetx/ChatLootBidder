@@ -5,4 +5,5 @@
 ## Author: TrumpetX
 ## SavedVariables: ChatLootBidder_Store
 
+ChatThrottleLib.lua
 ChatLootBidder.lua
