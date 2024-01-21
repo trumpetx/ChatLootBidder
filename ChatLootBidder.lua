@@ -319,7 +319,7 @@ local function Start(items, timer)
     session[i]["notes"] = {}
   end
   MessageStartChannel("-----------")
-  MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " [item-link] ms/os/roll #bid [optional-note]")
+  MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll #bid [optional-note]")
   if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
 end
@@ -501,7 +501,7 @@ function ChatFrame_OnEvent(event)
         mainSpec[bidder] = nil
         offSpec[bidder] = nil
         notes[bidder] = nil
-        MessageBidChannel("<" .. bidder .. "> " .. cancelBid)
+        MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. cancelBid)
         SendResponse(cancelBid, bidder)
         return
       end
@@ -514,7 +514,7 @@ function ChatFrame_OnEvent(event)
       cancel[bidder] = nil
       if tier == "roll" then
         if roll[bidder] ~= nil then
-          MessageBidChannel("Duplicate ROLL bid received from " .. bidder .. " for " .. item .. "; keeping current roll of " .. roll[bidder] .. ".")
+          MessageBidChannel("Duplicate ROLL bid received from " .. PlayerWithClassColor(bidder) .. " for " .. item .. "; keeping current roll of " .. roll[bidder] .. ".")
           SendResponse("Your roll of " .. roll[bidder] .. " has already been recorded", bidder)
           return
         end
@@ -552,7 +552,7 @@ function ChatFrame_OnEvent(event)
         received = "Roll of "
       end
       received = received .. amt .. " received for " .. item .. AppendNote(note)
-      MessageBidChannel("<" .. bidder .. "> " .. received)
+      MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. received)
       SendResponse(received, bidder)
       return
     end
