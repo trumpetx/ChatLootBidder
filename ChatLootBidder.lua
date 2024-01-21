@@ -393,7 +393,7 @@ local function SendResponse(message, bidder)
   if bidder == me then
     Message(message)
   else
-    SendChatMessage(message, "WHISPER", "Common", bidder)
+    SendChatMessage(message, "WHISPER", nil, bidder)
   end
 end
 
