@@ -174,6 +174,10 @@ local function MessageStartChannel(message)
 end
 
 local function BidSummary(announceWinners)
+  if session == nil then
+    Debug("No existing session to summarize")
+    return
+  end
   for item,itemSession in pairs(session) do
     MessageBidSummaryChannel(item)
     local ms = itemSession["ms"]
