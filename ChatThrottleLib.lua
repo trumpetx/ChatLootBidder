@@ -21,7 +21,17 @@
 -- Can run as a standalone addon also, but, really, just embed it! :-)
 --
 
-local CTL_VERSION = 13
+--
+-- ChangeLog and notes for this version:
+-- There is no historic CTL version 14 and this would supersceed all other Vanilla era
+-- versions (<=13) while also not stepping on private server TBC versions (15+)
+--
+-- Modifications for this version are simply to throttle raw chat lines per second and
+-- have nothing to do with the bytes sent.  Chat to CHANNEL, RAID, etc all count toward
+-- this limit.  Otherwise, this is the same as version 13 as it relates to throttling
+-- raw bytes sent.  To be clear, this update doesn't further throttle raw add-on messages.
+--
+local CTL_VERSION = 14
 
 local MAX_CPS = 800			  -- 2000 seems to be safe if NOTHING ELSE is happening. let's call it 800.
 local MSG_OVERHEAD = 40		-- Guesstimate overhead for sending a message; source+dest+chattype+protocolstuff
@@ -29,6 +39,8 @@ local MSG_OVERHEAD = 40		-- Guesstimate overhead for sending a message; source+d
 local BURST = 4000				-- WoW's server buffer seems to be about 32KB. 8KB should be safe, but seen disconnects on _some_ servers. Using 4KB now.
 
 local MIN_FPS = 20				-- Reduce output CPS to half (and don't burst) if FPS drops below this value
+
+local TURTLE_MAX_CHAT_LINES_PER_SECOND = 6 -- Turtle seems to allow > 6 lines per second in some situations; but for pure spam throughput, this appears to be the limit before the soft mute kicks in.
 
 if(ChatThrottleLib and ChatThrottleLib.version>=CTL_VERSION) then
 	-- There's already a newer (or same) version loaded. Buh-bye.
@@ -207,6 +219,7 @@ function ChatThrottleLib:Init()
 	self.Frame:SetScript("OnEvent", self.OnEvent);	-- v11: Monitor P_E_W so we can throttle hard for a few seconds
 	self.Frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 	self.OnUpdateDelay=0;
+  self.TurtleChatLinesAvailable=TURTLE_MAX_CHAT_LINES_PER_SECOND;
 	self.LastAvailUpdate=GetTime();
 	self.HardThrottlingBeginTime=GetTime();	-- v11: Throttle hard for a few seconds after startup
 
@@ -235,6 +248,7 @@ function ChatThrottleLib.Hook_SendChatMessage(text, chattype, language, destinat
 	local size = strlen(tostring(text or "")) + strlen(tostring(chattype or "")) + strlen(tostring(destination or "")) + 40;
 	self.avail = self.avail - size;
 	self.nBypass = self.nBypass + size;
+  self.TurtleSendChat()
 	return self.ORIG_SendChatMessage(text, chattype, language, destination);
 end
 function ChatThrottleLib.Hook_SendAddonMessage(prefix, text, chattype)
@@ -276,10 +290,25 @@ end
 
 -----------------------------------------------------------------------
 -- Despooling logic
+function ChatThrottleLib.TurtleSendChat()
+	self = ChatThrottleLib;
+  self.TurtleChatLinesAvailable = self.TurtleChatLinesAvailable - 1
+  -- Showing the frame will start to build back the available buffer and re-hide when max lines are available
+  self.Frame:Show();
+end
+
+function ChatThrottleLib.IsTurtleSendChatReady()
+	self = ChatThrottleLib;
+  if self.TurtleChatLinesAvailable > 1 then
+    return true
+  end
+  -- print("Chat Throttled")
+  return false
+end
 
 function ChatThrottleLib:Despool(Prio)
 	local ring = Prio.Ring;
-	while(ring.pos and Prio.avail>ring.pos[1].nSize) do
+	while(ring.pos and Prio.avail>ring.pos[1].nSize and self.IsTurtleSendChatReady()) do
 		local msg = tremove(Prio.Ring.pos, 1);
 		if(not Prio.Ring.pos[1]) then
 			local pipe = Prio.Ring.pos;
@@ -291,6 +320,7 @@ function ChatThrottleLib:Despool(Prio)
 		end
 		Prio.avail = Prio.avail - msg.nSize;
 		msg.f(msg[1], msg[2], msg[3], msg[4]);
+    if msg.type == "chat" then self.TurtleSendChat() end
 		Prio.nTotalSent = Prio.nTotalSent + msg.nSize;
 		self.MsgBin:Put(msg);
 	end
@@ -314,6 +344,9 @@ function ChatThrottleLib.OnUpdate()
 	if(self.OnUpdateDelay < 0.08) then
 		return;
 	end
+  if self.TurtleChatLinesAvailable < TURTLE_MAX_CHAT_LINES_PER_SECOND then
+    self.TurtleChatLinesAvailable = math.min(self.TurtleChatLinesAvailable + self.OnUpdateDelay * TURTLE_MAX_CHAT_LINES_PER_SECOND, TURTLE_MAX_CHAT_LINES_PER_SECOND)
+  end
 	self.OnUpdateDelay = 0;
 
 	self:UpdateAvail();
@@ -331,7 +364,7 @@ function ChatThrottleLib.OnUpdate()
 	end
 
 	-- Anything queued still?
-	if(n<1) then
+	if(n<1 and self.TurtleChatLinesAvailable >= TURTLE_MAX_CHAT_LINES_PER_SECOND) then
 		-- Nope. Move spillover bandwidth to global availability gauge and clear self.bQueueing
 		for prioname,Prio in pairs(self.Prio) do
 			self.avail = self.avail + Prio.avail;
@@ -395,9 +428,10 @@ function ChatThrottleLib:SendChatMessage(prio, prefix, text, chattype, language,
 	local nSize = strlen(text) + MSG_OVERHEAD;
 
 	-- Check if there's room in the global available bandwidth gauge to send directly
-	if(not self.bQueueing and nSize < self:UpdateAvail()) then
+	if(not self.bQueueing and nSize < self:UpdateAvail() and self.IsTurtleSendChatReady()) then
 		self.avail = self.avail - nSize;
 		self.ORIG_SendChatMessage(text, chattype, language, destination);
+    self.TurtleSendChat()
 		self.Prio[prio].nTotalSent = self.Prio[prio].nTotalSent + nSize;
 		return;
 	end
@@ -405,6 +439,7 @@ function ChatThrottleLib:SendChatMessage(prio, prefix, text, chattype, language,
 	-- Message needs to be queued
 	msg=self.MsgBin:Get();
 	msg.f=self.ORIG_SendChatMessage
+  msg.type="chat";
 	msg[1]=text;
 	msg[2]=chattype or "SAY";
 	msg[3]=language;
@@ -434,6 +469,7 @@ function ChatThrottleLib:SendAddonMessage(prio, prefix, text, chattype)
 	-- Message needs to be queued
 	msg=self.MsgBin:Get();
 	msg.f=self.ORIG_SendAddonMessage;
+  msg.type="addon";
 	msg[1]=prefix;
 	msg[2]=text;
 	msg[3]=chattype;
