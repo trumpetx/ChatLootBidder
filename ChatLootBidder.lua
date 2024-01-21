@@ -300,7 +300,9 @@ local function Start(items, timer)
     session[i]["cancel"] = {}
   end
   MessageStartChannel("-----------")
-  MessageStartChannel("/w " .. "\124cffffffff\124Hplayer:" .. me .. "\124h" .. me .. "\124h\124r" .. " [item-link] ms/os/roll #bid [optional-note]")
+  local _, unitClass = UnitClass("player")
+  local colorStr = RAID_CLASS_COLORS and RAID_CLASS_COLORS[unitClass].colorStr or "ffffff"
+  MessageStartChannel("/w " .. "\124c" .. colorStr .. "\124Hplayer:" .. me .. "\124h" .. me .. "\124h\124r" .. " [item-link] ms/os/roll #bid [optional-note]")
   if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
 end
