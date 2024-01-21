@@ -130,6 +130,11 @@ local function IsRaidAssistant(unitName)
   return rank ~= 0
 end
 
+local function GetPlayerClass(unitName)
+  _, _, _, _, _, playerClass = GetRaidRosterInfo(GetRaidIndex(unitName));
+  return playerClass
+end
+
 local function IsMasterLooterSet()
   local method, _ = GetLootMethod()
   return method == "master"
@@ -202,6 +207,14 @@ local function AppendNote(note)
   return note == "" and "" or " [ " .. note .. " ]"
 end
 
+local function PlayerWithClassColor(unit)
+  if RAID_CLASS_COLORS then
+    local unitClass = GetPlayerClass(unit)
+    return "\124c" .. RAID_CLASS_COLORS[unitClass].colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
+  end
+  return unit
+end
+
 local function BidSummary(announceWinners)
   if session == nil then
     Debug("No existing session to summarize")
@@ -227,7 +240,7 @@ local function BidSummary(announceWinners)
           local bid = ms[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
           elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -240,7 +253,7 @@ local function BidSummary(announceWinners)
           local bid = ofs[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
           elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -253,7 +266,7 @@ local function BidSummary(announceWinners)
           local bid = roll[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
           elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -306,9 +319,7 @@ local function Start(items, timer)
     session[i]["notes"] = {}
   end
   MessageStartChannel("-----------")
-  local _, unitClass = UnitClass("player")
-  local colorStr = RAID_CLASS_COLORS and RAID_CLASS_COLORS[unitClass].colorStr or "ffffff"
-  MessageStartChannel("/w " .. "\124c" .. colorStr .. "\124Hplayer:" .. me .. "\124h" .. me .. "\124h\124r" .. " [item-link] ms/os/roll #bid [optional-note]")
+  MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " [item-link] ms/os/roll #bid [optional-note]")
   if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
 end
