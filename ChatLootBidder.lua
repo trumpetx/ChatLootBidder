@@ -110,6 +110,31 @@ local ShowInfo = function()
   end
 end
 
+local function GetRaidIndex(unitName)
+  if UnitInRaid("player") == 1 then
+     for i = 1, GetNumRaidMembers() do
+        if UnitName("raid"..i) == unitName then
+           return i
+        end
+     end
+  end
+  return 0
+end
+
+local function IsInRaid(unitName)
+  return GetRaidIndex(unitName) ~= 0
+end
+
+local function IsRaidAssistant(unitName)
+  _, rank = GetRaidRosterInfo(GetRaidIndex(unitName));
+  return rank ~= 0
+end
+
+local function IsMasterLooterSet()
+  local method, _ = GetLootMethod()
+  return method == "master"
+end
+
 local function IsStaticChannel(channel)
   channel = channel == nil and nil or string.upper(channel)
   return channel == "RAID" or channel == "RAID_WARNING" or channel == "SAY" or channel == "EMOTE" or channel == "PARTY" or channel == "GUILD" or channel == "OFFICER"
@@ -259,7 +284,10 @@ end
 
 local function Start(items, timer)
   if session ~= nil then End() end
-  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on") end
+  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
+  if not IsRaidAssistant(me) then Error("You must be a raid leader or assistant in a raid to start a loot session"); return end
+  if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
+
   session = {}
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
@@ -414,6 +442,11 @@ function ChatFrame_OnEvent(event)
       local itemSession = session[item]
       if itemSession == nil then
         local invalidBid = "There is no active loot session for " .. item
+        SendResponse(invalidBid, bidder)
+        return
+      end
+      if not IsInRaid(arg2) then
+        local invalidBid = "You must be in the raid to send a bid on " .. item
         SendResponse(invalidBid, bidder)
         return
       end
