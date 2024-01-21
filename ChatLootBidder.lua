@@ -198,6 +198,10 @@ local function MessageStartChannel(message)
   Trace("<START>" .. message)
 end
 
+local function AppendNote(note)
+  return note == "" and "" or " [ " .. note .. " ]"
+end
+
 local function BidSummary(announceWinners)
   if session == nil then
     Debug("No existing session to summarize")
@@ -209,6 +213,7 @@ local function BidSummary(announceWinners)
     local ofs = itemSession["os"]
     local roll = itemSession["roll"]
     local cancel = itemSession["cancel"]
+    local notes = itemSession["notes"]
     local winner = {}
     local winnerBid = nil
     local winnerTier = nil
@@ -222,7 +227,7 @@ local function BidSummary(announceWinners)
           local bid = ms[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
           elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid)
+          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -235,7 +240,7 @@ local function BidSummary(announceWinners)
           local bid = ofs[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
           elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid)
+          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -248,7 +253,7 @@ local function BidSummary(announceWinners)
           local bid = roll[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
           elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. bidder .. ": " .. bid)
+          table.insert(summary, "-- " .. bidder .. ": " .. bid .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -256,7 +261,7 @@ local function BidSummary(announceWinners)
       MessageStartChannel("No bids received for " .. item)
       table.insert(summary, "- No Bids")
     else
-      local winnerMessage = table.concat(winner, ", ") .. " wins " .. item .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of ")) .. winnerBid
+      local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of ")) .. winnerBid
       MessageWinnerChannel(winnerMessage)
     end
     for _,v in summary do
@@ -298,6 +303,7 @@ local function Start(items, timer)
     session[i]["os"] = {}
     session[i]["roll"] = {}
     session[i]["cancel"] = {}
+    session[i]["notes"] = {}
   end
   MessageStartChannel("-----------")
   local _, unitClass = UnitClass("player")
@@ -456,6 +462,7 @@ function ChatFrame_OnEvent(event)
       local offSpec = itemSession["os"]
       local roll = itemSession["roll"]
       local cancel = itemSession["cancel"]
+      local notes = itemSession["notes"]
 
       local bidString = _end == nil and arg1 or string.sub(arg1, _end + 1)
       local bid = {}
@@ -482,6 +489,7 @@ function ChatFrame_OnEvent(event)
         cancel[bidder] = true
         mainSpec[bidder] = nil
         offSpec[bidder] = nil
+        notes[bidder] = nil
         MessageBidChannel("<" .. bidder .. "> " .. cancelBid)
         SendResponse(cancelBid, bidder)
         return
@@ -512,6 +520,7 @@ function ChatFrame_OnEvent(event)
       -- remove tier from the table for note concat
       table.remove(bid, 1)
       local note = table.concat(bid, " ")
+      notes[bidder] = note
       local received
       if tier == "ms" then
         mainSpec[bidder] = amt
@@ -531,7 +540,7 @@ function ChatFrame_OnEvent(event)
         roll[bidder] = amt
         received = "Roll of "
       end
-      received = received .. amt .. " received for " .. item .. (note == "" and "" or " [ " .. note .. " ]")
+      received = received .. amt .. " received for " .. item .. AppendNote(note)
       MessageBidChannel("<" .. bidder .. "> " .. received)
       SendResponse(received, bidder)
       return
