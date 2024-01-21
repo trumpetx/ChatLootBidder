@@ -134,11 +134,11 @@ end
 
 local function SendToChatChannel(channel, message, prio)
   if IsStaticChannel(channel) then
-    ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, channel)
+    ChatThrottleLib:SendChatMessage(prio or "ALERT", shortName, message, channel)
   else
     local channelIndex = GetChannelName(channel)
     if channelIndex > 0 then
-      ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, "CHANNEL", nil, channelIndex)
+      ChatThrottleLib:SendChatMessage(prio or "ALERT", shortName, message, "CHANNEL", nil, channelIndex)
     else
       Error(channel .. " <Not In Channel> " .. message)
     end
@@ -164,7 +164,7 @@ local function MessageBidChannel(message)
 end
 
 local function MessageWinnerChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "ALERT")
+  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "BULK")
   Trace("<WIN>" .. message)
 end
 
