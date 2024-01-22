@@ -1,5 +1,6 @@
 # Overview and Goals
 This addon's primary goal is to manage the process of bidding and rolling on items in a Master Looter environment in a semi-automated way.
+
 __Goals:__
 * __No addons are required__ for Raiders
 * A Master Looter can start a loot session on one or more items and _concurrently_ receive bids on everything
