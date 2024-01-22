@@ -14,12 +14,18 @@ local loginchannels = { "BATTLEGROUND", "RAID", "GUILD" }
 local groupchannels = { "BATTLEGROUND", "RAID" }
 local me = UnitName("player")
 local itemRegex = "|c.-|H.-|h|r"
+-- Roll tracking heavily borrowed from RollTracker: http://www.wowace.com/projects/rolltracker/
+if GetLocale() == 'deDE' then RANDOM_ROLL_RESULT = "%s w\195\188rfelt. Ergebnis: %d (%d-%d)"
+elseif RANDOM_ROLL_RESULT == nil then RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)" end -- Using english language https://vanilla-wow-archive.fandom.com/wiki/WoW_constants if not set
+local rollRegex = string.gsub(string.gsub(string.gsub("%s rolls %d (%d-%d)", "([%(%)%-])", "%%%1"), "%%s", "%(.+%)"), "%%d", "%(%%d+%)")
+
 ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
 
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
+  ChatLootBidder_Store.RollAnnounce = ChatLootBidder_Store.RollAnnounce or true
   ChatLootBidder_Store.BidAnnounce = ChatLootBidder_Store.BidAnnounce or false
   ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary or true
   ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
@@ -66,6 +72,7 @@ local ShowHelp = function()
   Message("/loot clear  - Clears a current loot session")
   Message("/loot summary  - Post the current loot session summary to the bid channel")
   Message("/loot bid  - Toggle incoming bid announcements")
+  Message("/loot roll  - Toggle generated roll announcements to summary channel")
   Message("/loot endsummary  - Toggle bid summary announcements")
   Message("/loot bid [channel]  - Set the channel for bids and/or summaries")
   Message("/loot session [channel]  - Set the channel for session start")
@@ -83,6 +90,7 @@ end
 
 local ShowInfo = function()
   Message("Bid announcing is " .. TrueOnOff(ChatLootBidder_Store.BidAnnounce))
+  Message("Roll announcing is " .. TrueOnOff(ChatLootBidder_Store.RollAnnounce))
   Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
   Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
   Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
@@ -150,12 +158,16 @@ local function IsTableEmpty(table)
   return next(table) == nil
 end
 
-local function GetKeysSortedByValue(tbl)
+local function GetKeys(tbl)
   local keys = {}
   for key in pairs(tbl) do
     table.insert(keys, key)
   end
+  return keys
+end
 
+local function GetKeysSortedByValue(tbl)
+  local keys = GetKeys(tbl)
   table.sort(keys, function(a, b)
     return tbl[a] > tbl[b]
   end)
@@ -194,7 +206,7 @@ local function MessageBidChannel(message)
 end
 
 local function MessageWinnerChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "ALERT")
+  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "NORMAL")
   Trace("<WIN>" .. message)
 end
 
@@ -203,8 +215,16 @@ local function MessageStartChannel(message)
   Trace("<START>" .. message)
 end
 
+local function SendResponse(message, bidder)
+  if bidder == me then
+    Message(message)
+  else
+    ChatThrottleLib:SendChatMessage("ALERT", shortName, message, "WHISPER", nil, bidder)
+  end
+end
+
 local function AppendNote(note)
-  return note == "" and "" or " [ " .. note .. " ]"
+  return (note == nil or note == "") and "" or " [ " .. note .. " ]"
 end
 
 local function PlayerWithClassColor(unit)
@@ -217,7 +237,7 @@ end
 
 local function BidSummary(announceWinners)
   if session == nil then
-    Debug("No existing session to summarize")
+    Error("There is no existing session")
     return
   end
   local summaries = {}
@@ -227,6 +247,19 @@ local function BidSummary(announceWinners)
     local roll = itemSession["roll"]
     local cancel = itemSession["cancel"]
     local notes = itemSession["notes"]
+    if announceWinners then
+      for bidder,r in roll do
+        if r == -1 then
+          r = math.random(1, 100)
+          roll[bidder] = r
+          if ChatLootBidder_Store.RollAnnounce then
+            MessageStartChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
+          else
+            SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
+          end
+        end
+      end
+    end
     local winner = {}
     local winnerBid = nil
     local winnerTier = nil
@@ -357,6 +390,9 @@ local InitSlashCommands = function()
         ChatLootBidder_Store.BidChannel = commandlist[2]
         Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
       end
+    elseif commandlist[1] == "roll" then
+      ChatLootBidder_Store.RollAnnounce = not ChatLootBidder_Store.RollAnnounce
+      Message("Roll announcing is " .. TrueOnOff(ChatLootBidder_Store.RollAnnounce))
     elseif commandlist[1] == "endsummary" then
       ChatLootBidder_Store.BidSummary = not ChatLootBidder_Store.BidSummary
       Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
@@ -449,14 +485,6 @@ local function IsValidTier(tier)
   return tier == "ms" or tier == "os" or tier == "roll" or tier == "cancel"
 end
 
-local function SendResponse(message, bidder)
-  if bidder == me then
-    Message(message)
-  else
-    ChatThrottleLib:SendChatMessage("ALERT", shortName, message, "WHISPER", nil, bidder)
-  end
-end
-
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
     _start, _end = string.find(arg1, itemRegex, 0)
@@ -519,12 +547,10 @@ function ChatFrame_OnEvent(event)
       -- If they had previously canceled, remove them and allow the new bid to continue
       cancel[bidder] = nil
       if tier == "roll" then
-        if roll[bidder] ~= nil then
-          MessageBidChannel("Duplicate ROLL bid received from " .. PlayerWithClassColor(bidder) .. " for " .. item .. "; keeping current roll of " .. roll[bidder] .. ".")
+        if roll[bidder] ~= nil and roll[bidder] ~= -1 then
           SendResponse("Your roll of " .. roll[bidder] .. " has already been recorded", bidder)
           return
         end
-        amt = math.random(1, 100)
       else
         if amt < 1 then
           local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
@@ -541,23 +567,22 @@ function ChatFrame_OnEvent(event)
       local received
       if tier == "ms" then
         mainSpec[bidder] = amt
-        received = "Main Spec bid of "
+        received = "Main Spec bid of " .. amt .. " received for " .. item .. AppendNote(note)
       elseif mainSpec[bidder] ~= nil then
         local invalidBid = "You already have a MS bid of " .. mainSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
         SendResponse(invalidBid, bidder)
         return
       elseif tier == "os" then
         offSpec[bidder] = amt
-        received = "Off Spec bid of "
+        received = "Off Spec bid of " .. amt .. " received for " .. item .. AppendNote(note)
       elseif offSpec[bidder] ~= nil then
         local invalidBid = "You already have an OS bid of " .. offSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
         SendResponse(invalidBid, bidder)
         return
       elseif tier == "roll" then
-        roll[bidder] = amt
-        received = "Roll of "
+        roll[bidder] = -1
+        received = "Your roll bid has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
       end
-      received = received .. amt .. " received for " .. item .. AppendNote(note)
       MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. received)
       SendResponse(received, bidder)
       return
@@ -566,14 +591,39 @@ function ChatFrame_OnEvent(event)
 	ChatLootBidder_ChatFrame_OnEvent(event);
 end
 
+local function HandleRoll(msg)
+  if session == nil then return end
+  local _, _, name, roll, low, high = string.find(msg, rollRegex)
+	if name then
+    if tonumber(low) > 1 or tonumber(high) > 100 then return end -- invalid roll
+    local onlyOneItem = getn(GetKeys(session)) == 1
+    for item,itemSession in pairs(session) do
+      local existingRoll = itemSession["roll"][name]
+      if existingRoll == -1 or (onlyOneItem and existingRoll == nil) then
+        itemSession["roll"][name] = tonumber(roll)
+        SendResponse("Your roll of " .. roll .. " been recorded for " .. item, name)
+        return
+      elseif onlyOneItem and (existingRoll or 0) > 0 then
+        SendResponse("Your roll of " .. existingRoll .. " has already been recorded for " .. item, bidder)
+        return
+      end
+    end
+    SendResponse("Ignoring your roll of " .. roll .. ".  You must first declare that you are rolling on an item first: '[item-link] roll'", name)
+	end
+end
+
 ChatLootBidderFrame = CreateFrame("Frame")
 ChatLootBidderFrame:RegisterEvent("ADDON_LOADED")
 ChatLootBidderFrame:RegisterEvent("CHAT_MSG_ADDON")
 ChatLootBidderFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+ChatLootBidderFrame:RegisterEvent("CHAT_MSG_SYSTEM")
 ChatLootBidderFrame:SetScript("OnEvent", function()
   if event == "ADDON_LOADED" and arg1 == "ChatLootBidder" then
       LoadVariables()
       InitSlashCommands()
+      ChatLootBidderFrame:UnregisterEvent("ADDON_LOADED")
+  elseif event == "CHAT_MSG_SYSTEM" then
+    HandleRoll(arg1)
 	elseif event == "CHAT_MSG_ADDON" and arg1 == shortName then
 		Trace("Received: " .. arg2)
 		local message = ParseMessage(arg2)
