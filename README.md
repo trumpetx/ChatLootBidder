@@ -52,3 +52,6 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * `/loot summary` if a current session is active, post the current summary to the "Bid Channel"
 * `/loot end` to end the current loot session.  Winners will be announced to the "Win Channel".  If enabled, a summary will be posted to the "Bid Channel".
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)
+
+# Known Issues / FAQ
+* An issue has been identified and not yet worked around where a Master looter "Does not know that language" when using the addon.  This prevents the ML from whispering back confirmations of bids and instructions when bidding syntax is incorrect.  No workaround or fix is known at this time.
