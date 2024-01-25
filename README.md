@@ -54,4 +54,4 @@ Most configuration should be set to a reasonable default.  When setting channel 
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)
 
 # Known Issues / FAQ
-* An issue has been identified and not yet worked around where a Master looter is a Troll and "Does not know that language" when using the addon.  This prevents the ML from whispering back confirmations of bids and instructions when bidding syntax is incorrect.  No workaround or fix is known at this time.  This does not appear to happen in all situations, and has not been reproduced by the developer.  The current guess is that there is something with the API `SendChatMessage` is defaulting to a language that is not known by the ML: `Common` perhaps?  TODO: FIX!!
+* Turtle can sometimes throttle messages even with the current `ThrottleChatLib` v.14.  The library has been tuned a little more to hopefully not allow this to happen again.
