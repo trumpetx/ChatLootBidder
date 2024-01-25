@@ -231,7 +231,7 @@ local function PlayerWithClassColor(unit)
   if RAID_CLASS_COLORS then
     local unitClass = GetPlayerClass(unit)
     Trace(unit .. " class: " .. unitClass)
-    local colorStr = RAID_CLASS_COLORS[unitClass].colorStr and RAID_CLASS_COLORS[unitClass].colorStr or "ffffffff" end
+    local colorStr = RAID_CLASS_COLORS[unitClass].colorStr and RAID_CLASS_COLORS[unitClass].colorStr or "ffffffff"
     return "\124c" .. colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
   end
   return unit
