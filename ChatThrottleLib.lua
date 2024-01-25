@@ -40,7 +40,9 @@ local BURST = 4000				-- WoW's server buffer seems to be about 32KB. 8KB should 
 
 local MIN_FPS = 20				-- Reduce output CPS to half (and don't burst) if FPS drops below this value
 
-local TURTLE_MAX_CHAT_LINES_PER_SECOND = 6 -- Turtle seems to allow > 6 lines per second in some situations; but for pure spam throughput, this appears to be the limit before the soft mute kicks in.
+-- Turtle seems to allow > 6 lines per second in some situations; but for pure spam throughput, a value of 6 here seems to be the limit.
+-- Due to timing issues, setting this to 5.75 seems to allow the most throughput without any accidental soft bans.
+local TURTLE_MAX_CHAT_LINES_PER_SECOND = 5.75
 
 if(ChatThrottleLib and ChatThrottleLib.version>=CTL_VERSION) then
 	-- There's already a newer (or same) version loaded. Buh-bye.
