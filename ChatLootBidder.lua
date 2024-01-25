@@ -228,11 +228,12 @@ local function AppendNote(note)
 end
 
 local function PlayerWithClassColor(unit)
-  if RAID_CLASS_COLORS then
+  if RAID_CLASS_COLORS and pfUI then -- pfUI loads class colors
     local unitClass = GetPlayerClass(unit)
-    Trace(unit .. " class: " .. unitClass)
-    local colorStr = RAID_CLASS_COLORS[unitClass].colorStr and RAID_CLASS_COLORS[unitClass].colorStr or "ffffffff"
-    return "\124c" .. colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
+    local colorStr = RAID_CLASS_COLORS[unitClass].colorStr
+    if colorStr and string.len(colorStr) == 8 then
+      return "\124c" .. colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
+    end
   end
   return unit
 end
