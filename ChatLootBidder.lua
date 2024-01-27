@@ -34,7 +34,7 @@ local function LoadVariables()
   ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
   ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
-  ChatLootBidder_Store.MinBid = 1
+  ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
 end
 
 local function ToWholeNumber(numberString, default)
@@ -455,7 +455,7 @@ local function SemverCompare(ver1, ver2)
 	local ver1Num = tonumber(major*10000 + minor*100 + fix)
 	major, minor, fix = strsplit(".", ver2)
 	local ver2Num = tonumber(major*10000 + minor*100 + fix)
-	return ver2Num - ver1Num
+	return ver1Num - ver2Num
 end
 
 local function ParseMessage(message)
@@ -474,13 +474,13 @@ local function ParseMessage(message)
 end
 
 local function HandleVersionMessage(message)
-  if SemverCompare(message["version"], addonVersion) >= 0 then
-    Trace(message["sender"] .. " has version " .. addonVersion)
+  if SemverCompare(message["version"], addonVersion) <= 0 then
+    Trace(message["sender"] .. " has version " .. message["version"])
     return
   end
   Trace("I have version " .. addonVersion .. " and " .. message["sender"] .. " has version " .. message["version"])
   if not upgradeMessageShown then
-    Message("New version available (" .. arg2 .. ")! " .. addonNotes)
+    Message("New version available (" .. message["version"] .. ") ! " .. addonNotes)
     upgradeMessageShown = true
   end
 end
