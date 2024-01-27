@@ -34,7 +34,7 @@ local function LoadVariables()
   ChatLootBidder_Store.DebugLevel = ChatLootBidder_Store.DebugLevel or 0
   ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
-  ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 0
+  ChatLootBidder_Store.MinBid = 1
 end
 
 local function ToWholeNumber(numberString, default)
@@ -250,7 +250,8 @@ local function BidSummary(announceWinners)
     local roll = itemSession["roll"]
     local cancel = itemSession["cancel"]
     local notes = itemSession["notes"]
-    if announceWinners then
+    local needsRoll = IsTableEmpty(ms) and IsTableEmpty(ofs)
+    if announceWinners and needsRoll then
       for bidder,r in roll do
         if r == -1 then
           r = math.random(1, 100)
@@ -454,7 +455,7 @@ local function SemverCompare(ver1, ver2)
 	local ver1Num = tonumber(major*10000 + minor*100 + fix)
 	major, minor, fix = strsplit(".", ver2)
 	local ver2Num = tonumber(major*10000 + minor*100 + fix)
-	return ver1Num - ver2Num
+	return ver2Num - ver1Num
 end
 
 local function ParseMessage(message)
