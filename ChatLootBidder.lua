@@ -352,8 +352,10 @@ local function Start(items, timer)
   session = {}
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
+  local bidAddonMessage = "sender=" .. me .. ",items="
   for k,i in pairs(items) do
     MessageStartChannel(i)
+    bidAddonMessage = bidAddonMessage .. i
     session[i] = {}
     session[i]["ms"] = {}
     session[i]["os"] = {}
@@ -365,6 +367,7 @@ local function Start(items, timer)
   MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll #bid [optional-note]")
   if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
+  ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", bidAddonMessage, "RAID")
 end
 
 local InitSlashCommands = function()
