@@ -327,6 +327,7 @@ local function BidSummary(announceWinners)
 end
 
 local function End()
+  ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", "endSession=1", "RAID")
   BidSummary(true)
   session = nil
 end
@@ -352,7 +353,7 @@ local function Start(items, timer)
   session = {}
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
-  local bidAddonMessage = "sender=" .. me .. ",items="
+  local bidAddonMessage = "sender=" .. me .. ",items=" -- TODO: remove sender= once everyone has upgraded beyond 1.0.1 NotChatLoot Bidder
   for k,i in pairs(items) do
     MessageStartChannel(i)
     bidAddonMessage = bidAddonMessage .. i
@@ -439,7 +440,7 @@ local InitSlashCommands = function()
 end
 
 local function SendVersionMessage(chan)
-	local msg = "sender=" .. me .. ",version=" .. addonVersion
+	local msg = "sender=" .. me .. ",version=" .. addonVersion -- TODO: remove sender here once Kale has upgraded
 	Trace("Sent: " .. msg)
 	ChatThrottleLib:SendAddonMessage("BULK", shortName, msg, chan)
 end
@@ -476,12 +477,12 @@ local function ParseMessage(message)
 	return t
 end
 
-local function HandleVersionMessage(message)
+local function HandleVersionMessage(message, sender)
   if SemverCompare(message["version"], addonVersion) <= 0 then
-    Trace(message["sender"] .. " has version " .. message["version"])
+    Trace(sender .. " has version " .. message["version"])
     return
   end
-  Trace("I have version " .. addonVersion .. " and " .. message["sender"] .. " has version " .. message["version"])
+  Trace("I have version " .. addonVersion .. " and " .. sender .. " has version " .. message["version"])
   if not upgradeMessageShown then
     Message("New version available (" .. message["version"] .. ") ! " .. addonNotes)
     upgradeMessageShown = true
@@ -635,7 +636,7 @@ ChatLootBidderFrame:SetScript("OnEvent", function()
 		Trace("Received: " .. arg2)
 		local message = ParseMessage(arg2)
     if message["version"] ~= nil then
-      HandleVersionMessage(message)
+      HandleVersionMessage(message, arg4)
     end
 	elseif event == "PARTY_MEMBERS_CHANGED" then
 		local groupsize = GetNumRaidMembers() > 0 and GetNumRaidMembers() or GetNumPartyMembers() > 0 and GetNumPartyMembers() or 0
