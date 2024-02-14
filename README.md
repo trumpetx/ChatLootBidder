@@ -21,6 +21,7 @@ Currently, the addon is text-only.  TODO: Add a GUI for administration to get aw
 * `/loot info` to show current settings
 ## Addon Setup
 Most configuration should be set to a reasonable default.  When setting channel names, you can use ([these options](https://wowwiki-archive.fandom.com/wiki/API_SendChatMessage))  If you wish to use a custom channel, just set the value to your custom channel name.
+* `/loot` Show the stage or end session window
 * `/loot bid` Toggle bid announcing to the "Bid Channel"
 * `/loot bid RAID` Set the bid announcing to `/ra` instead of the default: OFFICER. (note: this would make all bidding public instead of private)
 * `/loot endsummary` Toggle the automatically posted end summary to the "Bid Channel"
@@ -32,7 +33,8 @@ Most configuration should be set to a reasonable default.  When setting channel 
   * The minimum bid is not settable via the interactive chat, but you can modify it in your addon lua settings.  It is 1 by default.
 * `/loot debug 2` Sets the debug level to `2` which is VERY SPAMMY.  `1` is slightly less spammy than `2`.  This should not be necessary unless you're trying to debug the addon behavior.  `0` is the default and returns the addon to non-spam-you mode.
 ## Raid Usage
-* `/loot start [item-link][item-link][item-link][item-link]` to start a new loot session with the declared items.  Directions and item links will be listed to the "Session Channel".
+* `/loot stage [item-link][item-link]` stage items for a session start.  This can be used to add items before officially starting the session (to bundle multiple boss loot, for example).
+* `/loot start [item-link][item-link][item-link][item-link]` to start a new loot session with the declared items (along with any staged items).  Directions and item links will be listed to the "Session Channel".
   * `/loot start [item-link] 120` starts a session with a custom timer length of 120 seconds
   * The timer is just a suggestion, the Master Looter still needs to run `/loot end` to end the session.
   * While you don't technically need to be a Raid assistant to be a Master Looter, you must be one to use the addon.
@@ -48,7 +50,8 @@ Most configuration should be set to a reasonable default.  When setting channel 
   * `/w Masterlooter [item-link] cancel` to cancel your existing bids (MS/OS/roll)
     * note: your roll is saved until the Loot Session is ended in case you re-roll on a given item
     * You can use this to change the "tier" of your bid from MS to OS, etc
-* `/loot clear` to clear the current bidding session.  This clears all items, rolls, and bids completely.  It is not reversable: BE CAREFUL.
+* `/loot clear` to clear the current bidding session or stage.  This clears all items, rolls, and bids completely.  It is not reversable: BE CAREFUL.
+* `/loot clear [item-link]` to clear specific item(s) from the stage.  This can be reversed by `/loot stage [item-link]` and does not apply to sessions at all.
 * `/loot summary` if a current session is active, post the current summary to the "Bid Channel"
 * `/loot end` to end the current loot session.  Winners will be announced to the "Win Channel".  If enabled, a summary will be posted to the "Bid Channel".
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)

@@ -1,17 +1,21 @@
+local ChatLootBidder = ChatLootBidderFrame
+if ChatLootBidder == nil then print("XML Error"); return end
+local startSessionButton = getglobal(ChatLootBidder:GetName() .. "StartSession")
+local endSessionButton = getglobal(ChatLootBidder:GetName() .. "EndSession")
+local clearSessionButton = getglobal(ChatLootBidder:GetName() .. "ClearSession")
+
 local gfind = string.gmatch or string.gfind
 math.randomseed(time() * 100000000000)
 for i=1,3 do
   math.random(10000, 65000)
 end
 
-local addonNotes = GetAddOnMetadata("ChatLootBidder", "Notes")
-local addonVersion = GetAddOnMetadata("ChatLootBidder", "Version")
-local addonAuthor = GetAddOnMetadata("ChatLootBidder", "Author")
-local shortName = "CL"
-local chatPrefix = "<" .. shortName .. "> "
-local upgradeMessageShown = false
-local loginchannels = { "BATTLEGROUND", "RAID", "GUILD" }
-local groupchannels = { "BATTLEGROUND", "RAID" }
+local addonName = "ChatLootBidder"
+local addonTitle = GetAddOnMetadata(addonName, "Title")
+local addonNotes = GetAddOnMetadata(addonName, "Notes")
+local addonVersion = GetAddOnMetadata(addonName, "Version")
+local addonAuthor = GetAddOnMetadata(addonName, "Author")
+local chatPrefix = "<CL> "
 local me = UnitName("player")
 local itemRegex = "|c.-|H.-|h|r"
 -- Roll tracking heavily borrowed from RollTracker: http://www.wowace.com/projects/rolltracker/
@@ -22,12 +26,14 @@ local rollRegex = string.gsub(string.gsub(string.gsub("%s rolls %d (%d-%d)", "([
 ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
+local stage = nil
 
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
-  ChatLootBidder_Store.RollAnnounce = ChatLootBidder_Store.RollAnnounce or true
+  ChatLootBidder_Store.RollAnnounce = ChatLootBidder_Store.RollAnnounce == nil or ChatLootBidder_Store.RollAnnounce
+  ChatLootBidder_Store.AutoStage = ChatLootBidder_Store.AutoStage == nil or ChatLootBidder_Store.AutoStage
   ChatLootBidder_Store.BidAnnounce = ChatLootBidder_Store.BidAnnounce or false
-  ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary or true
+  ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary == true
   ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
   ChatLootBidder_Store.SessionAnnounceChannel = ChatLootBidder_Store.SessionAnnounceChannel or "RAID"
   ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
@@ -35,6 +41,7 @@ local function LoadVariables()
   ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
+  ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
 end
 
 local function ToWholeNumber(numberString, default)
@@ -66,10 +73,13 @@ local function Trace(message)
 end
 
 local ShowHelp = function()
+	Message("/loot  - Show the stage or end session window")
 	Message("/loot info  - Show current settings")
-	Message("/loot start [itm1] [itm2] [#timer_optional] - Start a session for item(s)")
+  Message("/loot stage [itm1] [itm2] - Stage item(s) for a future session start")
+	Message("/loot start [itm1] [itm2] [#timer_optional] - Start a session for item(s) + staged items(s)")
   Message("/loot end  - End a loot session and announce winner(s)")
-  Message("/loot clear  - Clears a current loot session")
+  Message("/loot clear  - Clears a current loot session and stage")
+  Message("/loot clear [itm1] [itm2] - Clear specific items from the stage (does not apply to loot session)")
   Message("/loot summary  - Post the current loot session summary to the bid channel")
   Message("/loot bid  - Toggle incoming bid announcements")
   Message("/loot roll  - Toggle generated roll announcements to summary channel")
@@ -79,9 +89,7 @@ local ShowHelp = function()
   Message("/loot win [channel]  - Set the channel for win announcements")
   Message("/loot timer #seconds  - Seconds for a BigWigs default loot timer bar")
   Message("/loot maxbid #number  - The maximum bid allowed to be considered valid")
-	Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
-	Message(addonNotes .. " for bugs and suggestions")
-	Message("Written by " .. addonAuthor)
+	-- Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
 end
 
 local function TrueOnOff(val)
@@ -97,7 +105,9 @@ local ShowInfo = function()
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
   Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
   Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
-	Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel)
+	if ChatLootBidder_Store.DebugLevel > 0 then Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel) end
+	Message(addonNotes .. " for bugs and suggestions")
+	Message("Written by " .. addonAuthor)
   if ChatLootBidder_Store.DebugLevel > 1 then
     Trace("Session: " .. (session == nil and "None" or ""))
     for k,v in pairs(session or {}) do
@@ -153,12 +163,14 @@ local function IsStaticChannel(channel)
   return channel == "RAID" or channel == "RAID_WARNING" or channel == "SAY" or channel == "EMOTE" or channel == "PARTY" or channel == "GUILD" or channel == "OFFICER"
 end
 
-local function IsTableEmpty(table)
+local function IsTableEmpty(tbl)
+  if tbl == nil then return true end
   local next = next
-  return next(table) == nil
+  return next(tbl) == nil
 end
 
 local function GetKeys(tbl)
+  if tbl == nil then return {} end
   local keys = {}
   for key in pairs(tbl) do
     table.insert(keys, key)
@@ -176,11 +188,11 @@ end
 
 local function SendToChatChannel(channel, message, prio)
   if IsStaticChannel(channel) then
-    ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, channel)
+    ChatThrottleLib:SendChatMessage(prio or "NORMAL", shortName, message, channel)
   else
     local channelIndex = GetChannelName(channel)
     if channelIndex > 0 then
-      ChatThrottleLib:SendChatMessage(prio or "BULK", shortName, message, "CHANNEL", nil, channelIndex)
+      ChatThrottleLib:SendChatMessage(prio or "NORMAL", shortName, message, "CHANNEL", nil, channelIndex)
     else
       Error(channel .. " <Not In Channel> " .. message)
     end
@@ -206,12 +218,12 @@ local function MessageBidChannel(message)
 end
 
 local function MessageWinnerChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message, "NORMAL")
+  SendToChatChannel(ChatLootBidder_Store.WinnerAnnounceChannel, message)
   Trace("<WIN>" .. message)
 end
 
 local function MessageStartChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message, "NORMAL")
+  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message)
   Trace("<START>" .. message)
 end
 
@@ -326,10 +338,13 @@ local function BidSummary(announceWinners)
   end
 end
 
-local function End()
+function ChatLootBidder:End()
   ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", "endSession=1", "RAID")
   BidSummary(true)
   session = nil
+  stage = nil
+  endSessionButton:Hide()
+  ChatLootBidder:Hide()
 end
 
 local function GetItemLinks(str, start)
@@ -344,13 +359,22 @@ local function GetItemLinks(str, start)
   end
 end
 
-local function Start(items, timer)
-  if session ~= nil then End() end
-  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
+function ChatLootBidder:Start(items, timer)
   if not IsRaidAssistant(me) then Error("You must be a raid leader or assistant in a raid to start a loot session"); return end
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
-
+  if session ~= nil then ChatLootBidder:End() end
+  local stageList = GetKeys(stage)
+  if items == nil then
+    items = stageList
+  else
+    for _, v in pairs(stageList) do
+      table.insert(items, v)
+    end
+  end
+  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
+  ChatLootBidder:EndSessionButtonShown()
   session = {}
+  stage = nil
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
   local bidAddonMessage = "sender=" .. me .. ",items=" -- TODO: remove sender= once everyone has upgraded beyond 1.0.1 NotChatLoot Bidder
@@ -366,9 +390,24 @@ local function Start(items, timer)
   end
   MessageStartChannel("-----------")
   MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll #bid [optional-note]")
-  if timer == -1 then timer = ChatLootBidder_Store.TimerSeconds end
+  if timer == nil or timer < 0 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
   ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", bidAddonMessage, "RAID")
+end
+
+function ChatLootBidder:Clear(stageOnly)
+  if session == nil or stageOnly then
+    if IsTableEmpty(stage) then
+      Message("There is no active session or stage")
+    else
+      stage = nil
+      Message("Cleared the stage")
+      ChatLootBidder:RedrawStage()
+    end
+  else
+    session = nil
+    Message("Cleared the current loot session")
+  end
 end
 
 local InitSlashCommands = function()
@@ -379,7 +418,13 @@ local InitSlashCommands = function()
 		for command in gfind(message, "[^ ]+") do
 			table.insert(commandlist, command)
 		end
-    if commandlist[1] == nil or commandlist[1] == "help" then
+    if commandlist[1] == nil then
+      if session == nil then
+        ChatLootBidder:StartSessionButtonShown()
+      else
+        ChatLootBidder:EndSessionButtonShown()
+      end
+    elseif commandlist[1] == "help" then
 			ShowHelp()
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
@@ -421,71 +466,33 @@ local InitSlashCommands = function()
 		elseif commandlist[1] == "info" then
       ShowInfo()
     elseif commandlist[1] == "end" then
-      End()
+      ChatLootBidder:End()
     elseif commandlist[1] == "clear" then
-      if session == nil then
-        Message("There is no active session")
+      if commandlist[2] == nil then
+        ChatLootBidder:Clear()
+      elseif stage == nil then
+        Error("The stage is empty")
       else
-        session = nil
-        Message("Cleared the current loot session")
+        local itemLinks = GetItemLinks(message)
+        for _, item in pairs(itemLinks) do
+          stage[item] = false
+        end
       end
+      ChatLootBidder:RedrawStage()
+    elseif commandlist[1] == "stage" then
+      local itemLinks = GetItemLinks(message)
+      for _, item in pairs(itemLinks) do
+        local item = item
+        ChatLootBidder:Stage(item, true)
+      end
+      ChatLootBidder:RedrawStage()
     elseif commandlist[1] == "summary" then
       BidSummary()
     elseif commandlist[1] == "start" then
-      local itemLinks = GetItemLinks(table.concat(commandlist, " "))
+      local itemLinks = GetItemLinks(message)
       local optionalTimer = ToWholeNumber(commandlist[getn(commandlist)], -1)
-      Start(itemLinks, optionalTimer)
+      ChatLootBidder:Start(itemLinks, optionalTimer)
 		end
-  end
-end
-
-local function SendVersionMessage(chan)
-	local msg = "sender=" .. me .. ",version=" .. addonVersion -- TODO: remove sender here once Kale has upgraded
-	Trace("Sent: " .. msg)
-	ChatThrottleLib:SendAddonMessage("BULK", shortName, msg, chan)
-end
-
---pfUI.api.strsplit
-local function strsplit(delimiter, subject)
-  if not subject then return nil end
-  local delimiter, fields = delimiter or ":", {}
-  local pattern = string.format("([^%s]+)", delimiter)
-  string.gsub(subject, pattern, function(c) fields[table.getn(fields)+1] = c end)
-  return unpack(fields)
-end
-
-local function SemverCompare(ver1, ver2)
-	local major, minor, fix = strsplit(".", ver1)
-	local ver1Num = tonumber(major*10000 + minor*100 + fix)
-	major, minor, fix = strsplit(".", ver2)
-	local ver2Num = tonumber(major*10000 + minor*100 + fix)
-	return ver1Num - ver2Num
-end
-
-local function ParseMessage(message)
-	local t={}
-	for kvp in gfind(message, "([^,]+)") do
-		local key = nil
-		for entry in gfind(kvp, "([^=]+)") do
-			if key == nil then
-				key = entry
-			else
-				t[key] = entry
-			end
-	  end
-	end
-	return t
-end
-
-local function HandleVersionMessage(message, sender)
-  if SemverCompare(message["version"], addonVersion) <= 0 then
-    Trace(sender .. " has version " .. message["version"])
-    return
-  end
-  Trace("I have version " .. addonVersion .. " and " .. sender .. " has version " .. message["version"])
-  if not upgradeMessageShown then
-    Message("New version available (" .. message["version"] .. ") ! " .. addonNotes)
-    upgradeMessageShown = true
   end
 end
 
@@ -599,7 +606,59 @@ function ChatFrame_OnEvent(event)
 	ChatLootBidder_ChatFrame_OnEvent(event);
 end
 
-local function HandleRoll(msg)
+function ChatLootBidder:StartSessionButtonShown()
+  ChatLootBidder:Show()
+  startSessionButton:Show()
+  clearSessionButton:Show()
+end
+
+function ChatLootBidder:EndSessionButtonShown()
+  ChatLootBidder:Show()
+  startSessionButton:Hide()
+  clearSessionButton:Hide()
+  endSessionButton:Show()
+  ChatLootBidder:SetHeight(50)
+  for i = 1, 8 do
+    local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+    stageItem:SetText("")
+    stageItem:Hide()
+  end
+end
+
+function ChatLootBidder:RedrawStage()
+  local i=1, k, show
+  for k, show in pairs(stage or {}) do
+    if show then
+      if i == 9 then Error("You may only stage up to 8 items.  Use /loot clear [itm] to clear specific items or /clear to wipe it clean."); return end
+      if not ChatLootBidder:IsVisible() then
+        ChatLootBidder:StartSessionButtonShown()
+      end
+      local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+      stageItem:SetText(k)
+      stageItem:Show()
+      i = i + 1
+    end
+  end
+  if i == 1 then -- if none shown
+    ChatLootBidder:Hide()
+  else
+    ChatLootBidder:SetHeight(220-(160-i*20))
+    for i = i, 8 do
+      local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+      stageItem:SetText("")
+      stageItem:Hide()
+    end
+  end
+end
+
+function ChatLootBidder:Stage(i, force)
+  stage = stage or {}
+  if force or stage[i] == nil then
+    stage[i] = true
+  end
+end
+
+function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
   if session == nil then return end
   local _, _, name, roll, low, high = string.find(msg, rollRegex)
 	if name then
@@ -620,35 +679,44 @@ local function HandleRoll(msg)
 	end
 end
 
-ChatLootBidderFrame = CreateFrame("Frame")
-ChatLootBidderFrame:RegisterEvent("ADDON_LOADED")
-ChatLootBidderFrame:RegisterEvent("CHAT_MSG_ADDON")
-ChatLootBidderFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-ChatLootBidderFrame:RegisterEvent("CHAT_MSG_SYSTEM")
-ChatLootBidderFrame:SetScript("OnEvent", function()
-  if event == "ADDON_LOADED" and arg1 == "ChatLootBidder" then
-      LoadVariables()
-      InitSlashCommands()
-      ChatLootBidderFrame:UnregisterEvent("ADDON_LOADED")
-  elseif event == "CHAT_MSG_SYSTEM" then
-    HandleRoll(arg1)
-	elseif event == "CHAT_MSG_ADDON" and arg1 == shortName then
-		Trace("Received: " .. arg2)
-		local message = ParseMessage(arg2)
-    if message["version"] ~= nil then
-      HandleVersionMessage(message, arg4)
+function ChatLootBidder.ADDON_LOADED()
+  LoadVariables()
+  InitSlashCommands()
+  this:UnregisterEvent("ADDON_LOADED")
+end
+
+function ChatLootBidder.CHAT_MSG_ADDON(addonTag, stringMessage, channel, sender)
+  if VersionUtil:CHAT_MSG_ADDON(addonName, function(ver)
+    Message("New version " .. ver .. " of " .. addonTitle .. " is available! Upgrade now at " .. addonNotes)
+  end) then return end
+end
+
+function ChatLootBidder.PARTY_MEMBERS_CHANGED()
+  VersionUtil:PARTY_MEMBERS_CHANGED(addonName)
+end
+
+function ChatLootBidder.PLAYER_ENTERING_WORLD()
+  VersionUtil:PLAYER_ENTERING_WORLD(addonName)
+  if ChatLootBidder_Store.Point and getn(ChatLootBidder_Store.Point) == 4 then
+    ChatLootBidder:SetPoint(ChatLootBidder_Store.Point[1], "UIParent", ChatLootBidder_Store.Point[2], ChatLootBidder_Store.Point[3], ChatLootBidder_Store.Point[4])
+  end
+end
+
+function ChatLootBidder.PLAYER_LEAVING_WORLD()
+  local point, _, relativePoint, xOfs, yOfs = ChatLootBidder:GetPoint()
+  ChatLootBidder_Store.Point = {point, relativePoint, xOfs, yOfs}
+end
+
+function ChatLootBidder.LOOT_OPENED()
+  if session ~= nil then return end
+  if not IsMasterLooterSet() or not IsRaidAssistant(me) then return end
+  local i
+  for i=1, GetNumLootItems() do
+    local lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive = GetLootSlotInfo(i)
+    -- print(lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive)
+    if rarity >= ChatLootBidder_Store.MinRarity then
+      ChatLootBidder:Stage(GetLootSlotLink(i))
     end
-	elseif event == "PARTY_MEMBERS_CHANGED" then
-		local groupsize = GetNumRaidMembers() > 0 and GetNumRaidMembers() or GetNumPartyMembers() > 0 and GetNumPartyMembers() or 0
-		if (this.currentGroupSize or 0) < groupsize then
-			for _, chan in pairs(groupchannels) do
-				SendVersionMessage(chan)
-			end
-		end
-		this.currentGroupSize = groupSize
-	elseif event == "PLAYER_ENTERING_WORLD" then
-		for _, chan in pairs(loginchannels) do
-			SendVersionMessage(chan)
-		end
-	end
-end)
+  end
+  ChatLootBidder:RedrawStage()
+end

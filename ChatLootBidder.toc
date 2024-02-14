@@ -6,4 +6,7 @@
 ## SavedVariables: ChatLootBidder_Store
 
 ChatThrottleLib.lua
+VersionUtil.lua
+
+ChatLootBidder.xml
 ChatLootBidder.lua
