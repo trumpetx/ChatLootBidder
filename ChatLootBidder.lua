@@ -169,13 +169,19 @@ local function IsTableEmpty(tbl)
   return next(tbl) == nil
 end
 
-local function GetKeys(tbl)
+local function GetKeysWhereValue(tbl, valueFunction)
   if tbl == nil then return {} end
   local keys = {}
-  for key in pairs(tbl) do
-    table.insert(keys, key)
+  for key,value in pairs(tbl) do
+    if valueFunction == nil or valueFunction(value) then
+      table.insert(keys, key)
+    end
   end
   return keys
+end
+
+local function GetKeys(tbl)
+  return GetKeysWhereValue(tbl)
 end
 
 local function GetKeysSortedByValue(tbl)
@@ -363,7 +369,7 @@ function ChatLootBidder:Start(items, timer)
   if not IsRaidAssistant(me) then Error("You must be a raid leader or assistant in a raid to start a loot session"); return end
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
   if session ~= nil then ChatLootBidder:End() end
-  local stageList = GetKeys(stage)
+  local stageList = GetKeysWhereValue(stage, function(v) return v == true end)
   if items == nil then
     items = stageList
   else
