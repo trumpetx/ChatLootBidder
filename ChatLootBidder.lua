@@ -416,6 +416,11 @@ function ChatLootBidder:Clear(stageOnly)
   end
 end
 
+function ChatLootBidder:Unstage(item, redraw)
+  stage[item] = false
+  if redraw then ChatLootBidder:RedrawStage() end
+end
+
 local InitSlashCommands = function()
 	SLASH_ChatLootBidder1, SLASH_ChatLootBidder2 = "/l", "/loot"
 	SlashCmdList["ChatLootBidder"] = function(message)
@@ -481,7 +486,7 @@ local InitSlashCommands = function()
       else
         local itemLinks = GetItemLinks(message)
         for _, item in pairs(itemLinks) do
-          stage[item] = false
+          ChatLootBidder:Unstage(item)
         end
       end
       ChatLootBidder:RedrawStage()
@@ -626,6 +631,8 @@ function ChatLootBidder:EndSessionButtonShown()
   ChatLootBidder:SetHeight(50)
   for i = 1, 8 do
     local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+    local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+    unstageButton:Hide()
     stageItem:SetText("")
     stageItem:Hide()
   end
@@ -640,6 +647,8 @@ function ChatLootBidder:RedrawStage()
         ChatLootBidder:StartSessionButtonShown()
       end
       local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+      local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+      unstageButton:Show()
       stageItem:SetText(k)
       stageItem:Show()
       i = i + 1
@@ -651,6 +660,8 @@ function ChatLootBidder:RedrawStage()
     ChatLootBidder:SetHeight(220-(160-i*20))
     for i = i, 8 do
       local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
+      local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+      unstageButton:Hide()
       stageItem:SetText("")
       stageItem:Hide()
     end

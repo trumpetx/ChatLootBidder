@@ -47,6 +47,78 @@
       </EdgeSize>
     </Backdrop>
     <Frames>
+      <Button name="$parentUnstageButton1" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-62"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem1"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton2" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-82"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem2"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton3" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-102"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem3"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton4" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-122"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem4"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton5" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-142"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem5"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton6" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-162"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem6"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton7" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-182"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem7"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parentUnstageButton8" inherits="UIPanelCloseButton" text="">
+        <Size><AbsDimension x="28" y="28"/></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-202"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem8"):GetText(), true)
+          </OnClick>
+        </Scripts>
+      </Button>
       <Button name="$parentStartSession" inherits="GameMenuButtonTemplate" text="Start Loot Session" hidden="true">
         <Size><AbsDimension x="100" y="28"/></Size>
         <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="-10"/></Offset></Anchor></Anchors>
