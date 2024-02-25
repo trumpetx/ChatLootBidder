@@ -383,10 +383,10 @@ function ChatLootBidder:Start(items, timer)
   stage = nil
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
-  local bidAddonMessage = "sender=" .. me .. ",items=" -- TODO: remove sender= once everyone has upgraded beyond 1.0.1 NotChatLoot Bidder
+  local bidAddonMessage = "items="
   for k,i in pairs(items) do
     MessageStartChannel(i)
-    bidAddonMessage = bidAddonMessage .. i
+    bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
     session[i] = {}
     session[i]["ms"] = {}
     session[i]["os"] = {}
