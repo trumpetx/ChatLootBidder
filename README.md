@@ -57,4 +57,4 @@ Most configuration should be set to a reasonable default.  When setting channel 
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)
 
 # Known Issues / FAQ
-* Turtle can sometimes throttle messages even with the current `ThrottleChatLib` v.14.  The library has been tuned a little more to hopefully not allow this to happen again.
+* None, at this time
