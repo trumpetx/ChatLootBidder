@@ -27,6 +27,7 @@ ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
 local stage = nil
+local lastWhisper = nil
 
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
@@ -513,6 +514,8 @@ end
 
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
+    if lastWhisper == arg1 then return else lastWhisper = arg1 end
+
     _start, _end = string.find(arg1, itemRegex, 0)
     if _start ~= nil then
       local bidder = arg2

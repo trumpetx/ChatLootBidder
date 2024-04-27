@@ -58,3 +58,7 @@ Most configuration should be set to a reasonable default.  When setting channel 
 
 # Known Issues / FAQ
 * None, at this time
+
+# Changelog
+* 1.4.3
+  * Preventing duplicate whisper responses if incoming whispers are read in multiple windows
