@@ -60,6 +60,8 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * None, at this time
 
 # Changelog
+* 1.5.0
+  * Adding MS/OS mode for non-bid raids
 * 1.4.4
   * Fixing a bug with duplicate whispers that caused the same whisper from different people from being filtered
 * 1.4.3
