@@ -10,6 +10,10 @@ for i=1,3 do
   math.random(10000, 65000)
 end
 
+local function Roll()
+  return math.random(1, 100)
+end
+
 local addonName = "ChatLootBidder"
 local addonTitle = GetAddOnMetadata(addonName, "Title")
 local addonNotes = GetAddOnMetadata(addonName, "Notes")
@@ -26,6 +30,7 @@ local rollRegex = string.gsub(string.gsub(string.gsub("%s rolls %d (%d-%d)", "([
 ChatLootBidder_ChatFrame_OnEvent = ChatFrame_OnEvent
 
 local session = nil
+local sessionMode = nil
 local stage = nil
 local lastWhisper = nil
 
@@ -43,6 +48,8 @@ local function LoadVariables()
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
+  ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "DKP" -- DKP | MSOS
+  ChatLootBidder_Store.BreakTies = ChatLootBidder_Store.BreakTies == nil or ChatLootBidder_Store.BreakTies
 end
 
 local function ToWholeNumber(numberString, default)
@@ -90,6 +97,9 @@ local ShowHelp = function()
   Message("/loot win [channel]  - Set the channel for win announcements")
   Message("/loot timer #seconds  - Seconds for a BigWigs default loot timer bar")
   Message("/loot maxbid #number  - The maximum bid allowed to be considered valid")
+  Message("/loot dkp  - Switch to DKP Session Mode")
+  Message("/loot msos  - Switch to MS/OS Session Mode")
+  Message("/loot breakties  - Toggle the 'break ties' mode for DKP bids")
 	-- Message("/loot debug [0-2]  - Set the debug level (1 = debug, 2 = trace)")
 end
 
@@ -106,6 +116,8 @@ local ShowInfo = function()
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
   Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
   Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
+  Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
+  Message("Break Ties mode (DKP only) is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
 	if ChatLootBidder_Store.DebugLevel > 0 then Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel) end
 	Message(addonNotes .. " for bugs and suggestions")
 	Message("Written by " .. addonAuthor)
@@ -273,7 +285,7 @@ local function BidSummary(announceWinners)
     if announceWinners and needsRoll then
       for bidder,r in roll do
         if r == -1 then
-          r = math.random(1, 100)
+          r = Roll()
           roll[bidder] = r
           if ChatLootBidder_Store.RollAnnounce then
             MessageStartChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
@@ -329,11 +341,47 @@ local function BidSummary(announceWinners)
         end
       end
     end
+    local breakTies = ChatLootBidder_Store.BreakTies or sessionMode ~= "DKP"
+    if getn(winner) > 1 then
+      if sessionMode == "DKP" then
+        MessageWinnerChannel(table.concat(winner, ", ") .. " tied with a ".. string.upper(winnerTier) .. " bid of " .. winnerBid .. ", rolling it off:")
+      else
+        MessageWinnerChannel(table.concat(winner, ", ") .. " bid ".. string.upper(winnerTier) ..", rolling it off:")
+      end
+      while getn(winner) > 1 and breakTies do
+        local winningRoll = 0
+        for _,bidder in winner do
+          local r = roll[bidder]
+          if r == -1 or r == nil then
+            r = Roll()
+            roll[bidder] = r
+            MessageWinnerChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
+          else
+            r = roll[bidder]
+            MessageWinnerChannel(PlayerWithClassColor(bidder) .. " already rolled " .. r .. " (1-100) for " .. item)
+          end
+          if winningRoll < r then winningRoll = r end
+        end
+        local newWinner = {}
+        for _,bidder in winner do
+          if roll[bidder] == winningRoll then
+            table.insert(newWinner, bidder)
+          end
+          roll[bidder] = -1
+        end
+        winner = newWinner
+      end
+    end
     if IsTableEmpty(winner) then
       if announceWinners then MessageStartChannel("No bids received for " .. item) end
       table.insert(summary, item .. ": No Bids")
     elseif announceWinners then
-      local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of ")) .. winnerBid
+      local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item
+      if sessionMode == "DKP" then
+        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of ")) .. winnerBid
+      else
+        winnerMessage = winnerMessage .. " for " .. string.upper(winnerTier)
+      end
       MessageWinnerChannel(winnerMessage)
     end
     table.insert(summaries, summary)
@@ -349,6 +397,7 @@ function ChatLootBidder:End()
   ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", "endSession=1", "RAID")
   BidSummary(true)
   session = nil
+  sessionMode = nil
   stage = nil
   endSessionButton:Hide()
   ChatLootBidder:Hide()
@@ -366,9 +415,10 @@ local function GetItemLinks(str, start)
   end
 end
 
-function ChatLootBidder:Start(items, timer)
+function ChatLootBidder:Start(items, timer, mode)
   if not IsRaidAssistant(me) then Error("You must be a raid leader or assistant in a raid to start a loot session"); return end
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
+  local mode = mode ~= nil and mode or ChatLootBidder_Store.DefaultSessionMode
   if session ~= nil then ChatLootBidder:End() end
   local stageList = GetKeysWhereValue(stage, function(v) return v == true end)
   if items == nil then
@@ -381,10 +431,11 @@ function ChatLootBidder:Start(items, timer)
   if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
   ChatLootBidder:EndSessionButtonShown()
   session = {}
+  sessionMode = mode
   stage = nil
   MessageStartChannel("Bid on the following items")
   MessageStartChannel("-----------")
-  local bidAddonMessage = "items="
+  local bidAddonMessage = "mode=" .. mode .. ",items="
   for k,i in pairs(items) do
     MessageStartChannel(i)
     bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
@@ -396,7 +447,7 @@ function ChatLootBidder:Start(items, timer)
     session[i]["notes"] = {}
   end
   MessageStartChannel("-----------")
-  MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll #bid [optional-note]")
+  MessageStartChannel("/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll" .. (mode == "DKP" and " #bid" or "") .. " [optional-note]")
   if timer == nil or timer < 0 then timer = ChatLootBidder_Store.TimerSeconds end
   if BigWigs and timer > 0 then BWCB(timer, "Bidding Ends") end
   ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", bidAddonMessage, "RAID")
@@ -438,6 +489,12 @@ local InitSlashCommands = function()
       end
     elseif commandlist[1] == "help" then
 			ShowHelp()
+    elseif commandlist[1] == "breakties" then
+      ChatLootBidder_Store.BreakTies = not ChatLootBidder_Store.BreakTies
+      Message("Break Ties mode is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
+    elseif commandlist[1] == "msos" or commandlist[1] == "dkp" then
+      ChatLootBidder_Store.DefaultSessionMode = string.upper(commandlist[1])
+      Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
@@ -512,6 +569,15 @@ local function IsValidTier(tier)
   return tier == "ms" or tier == "os" or tier == "roll" or tier == "cancel"
 end
 
+local function InvalidBidSyntax(item)
+  local bidExample = " " .. (ChatLootBidder_Store.MinBid + 9)
+  return "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms" .. (sessionMode == "DKP" and bidExample or "") .. "' or '[item-link] os" .. (sessionMode == "DKP" and bidExample or "") .. "' or '[item-link] roll'"
+end
+
+local function of(amt)
+  return sessionMode == "DKP" and (" of " .. amt) or ""
+end
+
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
     if lastWhisper == arg1 .. arg2 then return else lastWhisper = arg1 .. arg2 end
@@ -554,8 +620,7 @@ function ChatFrame_OnEvent(event)
         tier = amt;
         amt = ToWholeNumber(oldTier)
       else
-        local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
-        SendResponse(invalidBid, bidder)
+        SendResponse(InvalidBidSyntax(item), bidder)
         return
       end
       if tier == "cancel" then
@@ -580,14 +645,15 @@ function ChatFrame_OnEvent(event)
           SendResponse("Your roll of " .. roll[bidder] .. " has already been recorded", bidder)
           return
         end
-      else
-        if amt < 1 then
-          local invalidBid = "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms 10' or '[item-link] os 10' or '[item-link] roll'"
-          SendResponse(invalidBid, bidder)
+      elseif sessionMode == "DKP" then
+        if amt < ChatLootBidder_Store.MinBid then
+          SendResponse(InvalidBidSyntax(item), bidder)
           return
         end
         -- remove amount from the table for note concat
         table.remove(bid, 2)
+      else
+        amt = 1
       end
       -- remove tier from the table for note concat
       table.remove(bid, 1)
@@ -596,17 +662,17 @@ function ChatFrame_OnEvent(event)
       local received
       if tier == "ms" then
         mainSpec[bidder] = amt
-        received = "Main Spec bid of " .. amt .. " received for " .. item .. AppendNote(note)
+        if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
+        received = "Main Spec bid" .. of(amt) .. " received for " .. item .. AppendNote(note)
       elseif mainSpec[bidder] ~= nil then
-        local invalidBid = "You already have a MS bid of " .. mainSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
-        SendResponse(invalidBid, bidder)
+        SendResponse("You already have a MS bid" .. of(mainSpec[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
         return
       elseif tier == "os" then
         offSpec[bidder] = amt
-        received = "Off Spec bid of " .. amt .. " received for " .. item .. AppendNote(note)
+        if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
+        received = "Off Spec bid" .. of(amt) .. " received for " .. item .. AppendNote(note)
       elseif offSpec[bidder] ~= nil then
-        local invalidBid = "You already have an OS bid of " .. offSpec[bidder] .. " recorded. Use '[item-link] cancel' to cancel your current MS bid."
-        SendResponse(invalidBid, bidder)
+        SendResponse("You already have an OS bid" .. of(offSpec[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
         return
       elseif tier == "roll" then
         roll[bidder] = -1
@@ -683,19 +749,24 @@ function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
   local _, _, name, roll, low, high = string.find(msg, rollRegex)
 	if name then
     if tonumber(low) > 1 or tonumber(high) > 100 then return end -- invalid roll
-    local onlyOneItem = getn(GetKeys(session)) == 1
+    local existingWhy = ""
     for item,itemSession in pairs(session) do
       local existingRoll = itemSession["roll"][name]
-      if existingRoll == -1 or (onlyOneItem and existingRoll == nil) then
+      if existingRoll == -1 or ((1 == getn(GetKeys(session))) and existingRoll == nil) then
         itemSession["roll"][name] = tonumber(roll)
         SendResponse("Your roll of " .. roll .. " been recorded for " .. item, name)
         return
-      elseif onlyOneItem and (existingRoll or 0) > 0 then
-        SendResponse("Your roll of " .. existingRoll .. " has already been recorded for " .. item, bidder)
-        return
+      elseif (existingRoll or 0) > 0 then
+        existingWhy = existingWhy .. "Your roll of " .. existingRoll .. " has already been recorded for " .. item .. ". "
       end
     end
-    SendResponse("Ignoring your roll of " .. roll .. ".  You must first declare that you are rolling on an item first: '[item-link] roll'", name)
+    if string.len(existingWhy) > 0 then
+      SendResponse("Ignoring your roll of " .. roll .. ". " .. existingWhy, name)
+    elseif sessionMode == "DKP" then
+      SendResponse("Ignoring your roll of " .. roll .. ". You must first declare that you are rolling on an item first: '[item-link] roll'", name)
+    else
+      SendResponse("Ignoring your roll of " .. roll .. ". You must bid on an item before rolling on it.", name)
+    end
 	end
 end
 
