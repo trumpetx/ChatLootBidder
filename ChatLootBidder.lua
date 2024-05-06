@@ -57,7 +57,7 @@ local function ToWholeNumber(numberString, default)
   if numberString == nil then return default end
   local num = math.floor(tonumber(numberString) or default)
   if default == num then return default end
-  return math.max(num, 0)
+  return math.max(num, default)
 end
 
 local function Error(message)
@@ -97,6 +97,8 @@ local ShowHelp = function()
   Message("/loot win [channel]  - Set the channel for win announcements")
   Message("/loot timer #seconds  - Seconds for a BigWigs default loot timer bar")
   Message("/loot maxbid #number  - The maximum bid allowed to be considered valid")
+  Message("/loot autostage  - Toggle the 'auto-stage' mode which pops up a staging window when you loot a boss")
+  Message("/loot autostageloot  - Sets the loot level when auto-staging loot in the GUI window 0-5 (gray-legendary, 4 by default)")
   Message("/loot dkp  - Switch to DKP Session Mode")
   Message("/loot msos  - Switch to MS/OS Session Mode")
   Message("/loot breakties  - Toggle the 'break ties' mode for DKP bids")
@@ -116,6 +118,8 @@ local ShowInfo = function()
   Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
   Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
   Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
+  Message("Auto-stage is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
+  Message("Auto-stage loot level is set to " .. ChatLootBidder_Store.MinRarity .. " (0=gray - 5=legendary)")
   Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
   Message("Break Ties mode (DKP only) is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
 	if ChatLootBidder_Store.DebugLevel > 0 then Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel) end
@@ -489,6 +493,19 @@ local InitSlashCommands = function()
       end
     elseif commandlist[1] == "help" then
 			ShowHelp()
+    elseif commandlist[1] == "autostage" then
+      ChatLootBidder_Store.AutoStage = not ChatLootBidder_Store.AutoStage
+      Message("Auto-Stage mode is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
+    elseif commandlist[1] == "autostageloot" then
+      local lootLevel = ToWholeNumber(commandlist[2], -1)
+      Message("Loot Level entry is " .. commandlist[2])
+      Message("Loot Level parsed is " .. lootLevel)
+      if lootLevel > 5 or lootLevel < 0 then
+        Error("Provide a loot-level 0 - 5")
+      else
+        ChatLootBidder.MinRarity = lootLevel
+      end
+      Message("Auto-stage loot level is set to " .. ChatLootBidder_Store.MinRarity .. " (0=gray - 5=legendary)")
     elseif commandlist[1] == "breakties" then
       ChatLootBidder_Store.BreakTies = not ChatLootBidder_Store.BreakTies
       Message("Break Ties mode is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
@@ -800,6 +817,7 @@ end
 
 function ChatLootBidder.LOOT_OPENED()
   if session ~= nil then return end
+  if not ChatLootBidder_Store.AutoStage then return end
   if not IsMasterLooterSet() or not IsRaidAssistant(me) then return end
   local i
   for i=1, GetNumLootItems() do

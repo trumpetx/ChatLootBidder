@@ -31,6 +31,13 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * `/loot timer 45` Sets the BigWigs timer to 45 seconds instead of the default: 30
 * `/loot maxbid 10000` Sets the max bid value at 10000 instead of the default: 5000.  You can thank very mean raiders for the need to create this setting :P.
   * The minimum bid is not settable via the interactive chat, but you can modify it in your addon lua settings.  It is 1 by default.
+* `/loot autostage` Toggle the 'auto-stage' mode which pops up a staging window when you loot a boss
+* `/loot autostageloot` Sets the loot level when auto-staging loot in the GUI window 0-5 (gray-legendary, 4 by default)
+* `/loot breakties` (on by default) only used by DKP mode to optionally (not) break ties for bids and let the ML looter decide how to proceed.  Breaking ties uses `/random 100` to break ties while displaying the end result to the raid.
+* `/loot dkp` to change to DKP mode (on by default)
+  * This mode uses maxbid/minbid and parses numbers sent by raiders to determine who wins a given loot item
+* `/loot msos` to change to MS/OS mode
+  * This mode uses bid tiers (MS/OS/roll) and a roll (user generated or addon generated at the end).  Ties are automatically broken by the addon at the end.
 * `/loot debug 2` Sets the debug level to `2` which is VERY SPAMMY.  `1` is slightly less spammy than `2`.  This should not be necessary unless you're trying to debug the addon behavior.  `0` is the default and returns the addon to non-spam-you mode.
 ## Raid Usage
 * `/loot stage [item-link][item-link]` stage items for a session start.  This can be used to add items before officially starting the session (to bundle multiple boss loot, for example).
@@ -57,12 +64,17 @@ Most configuration should be set to a reasonable default.  When setting channel 
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)
 
 # Known Issues / FAQ
-* None, at this time
+* The addon does not handle duplicate items at all.  Due to the data structures to prevent duplicates (using the item link as the key), this will be hard to change in the future.  Master Looters should be aware that this is a known issue and may never change.
+* Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.5.1
+  * Enabling the setting of previously added properties:
+    * `/loot autostage` which will turn on/off the GUI popup when you loot a boss
+    * `/loot autostageloot` which sets the minimum rairity of what is put into the GUI stage (0-5); 4 (epic) is the default
 * 1.5.0
-  * Adding MS/OS mode for non-bid raids
+  * Adding MS/OS mode for non-bid raids `/loot msos` to switch modes and `/loot dkp` to switch back
 * 1.4.4
-  * Fixing a bug with duplicate whispers that caused the same whisper from different people from being filtered
+  * Fixing a bug with duplicate whisper filtering that caused the same whisper from different people to be filtered
 * 1.4.3
   * Preventing duplicate whisper responses if incoming whispers are read in multiple windows
