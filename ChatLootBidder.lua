@@ -512,6 +512,7 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "msos" or commandlist[1] == "dkp" then
       ChatLootBidder_Store.DefaultSessionMode = string.upper(commandlist[1])
       Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
+      ChatLootBidder:RedrawStage()
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
@@ -743,7 +744,7 @@ function ChatLootBidder:RedrawStage()
   if i == 1 then -- if none shown
     ChatLootBidder:Hide()
   else
-    ChatLootBidder:SetHeight(220-(160-i*20))
+    ChatLootBidder:SetHeight(240-(160-i*20))
     for i = i, 8 do
       local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
       local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
@@ -752,6 +753,7 @@ function ChatLootBidder:RedrawStage()
       stageItem:Hide()
     end
   end
+  getglobal(ChatLootBidder:GetName() .. "HeaderString"):SetText(ChatLootBidder_Store.DefaultSessionMode .. " Mode")
 end
 
 function ChatLootBidder:Stage(i, force)
