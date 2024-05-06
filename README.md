@@ -68,6 +68,8 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.5.2
+  * Added the "Mode" (MSOS or DKP) to the Stage GUI frame for the Master Looter's reference
 * 1.5.1
   * Enabling the setting of previously added properties:
     * `/loot autostage` which will turn on/off the GUI popup when you loot a boss
