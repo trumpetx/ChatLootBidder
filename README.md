@@ -60,5 +60,7 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * None, at this time
 
 # Changelog
+* 1.4.4
+  * Fixing a bug with duplicate whispers that caused the same whisper from different people from being filtered
 * 1.4.3
   * Preventing duplicate whisper responses if incoming whispers are read in multiple windows

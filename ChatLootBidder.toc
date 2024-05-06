@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Title: Chat Loot Bidder
-## Version: 1.4.3
+## Version: 1.4.4
 ## Notes: https://github.com/trumpetx/ChatLootBidder
 ## Author: |c013220ffTrumpetX|r
 ## SavedVariables: ChatLootBidder_Store
