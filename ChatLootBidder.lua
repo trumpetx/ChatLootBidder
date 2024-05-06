@@ -514,7 +514,7 @@ end
 
 function ChatFrame_OnEvent(event)
   if event == "CHAT_MSG_WHISPER" and session ~= nil then
-    if lastWhisper == arg1 then return else lastWhisper = arg1 end
+    if lastWhisper == arg1 .. arg2 then return else lastWhisper = arg1 .. arg2 end
 
     _start, _end = string.find(arg1, itemRegex, 0)
     if _start ~= nil then
