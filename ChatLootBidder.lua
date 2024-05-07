@@ -50,6 +50,7 @@ local function LoadVariables()
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
   ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "DKP" -- DKP | MSOS
   ChatLootBidder_Store.BreakTies = ChatLootBidder_Store.BreakTies == nil or ChatLootBidder_Store.BreakTies
+  ChatLootBidder_Store.AddonVersion = addonVersion
 end
 
 local function ToWholeNumber(numberString, default)
