@@ -498,12 +498,10 @@ local InitSlashCommands = function()
       Message("Auto-Stage mode is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
     elseif commandlist[1] == "autostageloot" then
       local lootLevel = ToWholeNumber(commandlist[2], -1)
-      Message("Loot Level entry is " .. commandlist[2])
-      Message("Loot Level parsed is " .. lootLevel)
       if lootLevel > 5 or lootLevel < 0 then
         Error("Provide a loot-level 0 - 5")
       else
-        ChatLootBidder.MinRarity = lootLevel
+        ChatLootBidder_Store.MinRarity = lootLevel
       end
       Message("Auto-stage loot level is set to " .. ChatLootBidder_Store.MinRarity .. " (0=gray - 5=legendary)")
     elseif commandlist[1] == "breakties" then
