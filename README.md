@@ -1,5 +1,5 @@
 # Overview and Goals
-This addon's primary goal is to manage the process of bidding and rolling on items in a Master Looter environment in a semi-automated way.
+This addon's primary goal is to manage the process of bidding and rolling on items in a Master Looter environment in a semi-automated way.  This addon is for Master Looters.  If you are a bidder/raider, you should check out the [NotChatLootBidder](https://github.com/trumpetx/NotChatLootBidder) addon.
 
 __Goals:__
 * __No addons are required__ for Raiders
