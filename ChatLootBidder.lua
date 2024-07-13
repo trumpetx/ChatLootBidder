@@ -34,12 +34,15 @@ local sessionMode = nil
 local stage = nil
 local lastWhisper = nil
 
+local function DefaultFalse(prop) return prop == true end
+local function DefaultTrue(prop) return prop == nil or DefaultFalse(prop) end
+
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
-  ChatLootBidder_Store.RollAnnounce = ChatLootBidder_Store.RollAnnounce == nil or ChatLootBidder_Store.RollAnnounce
-  ChatLootBidder_Store.AutoStage = ChatLootBidder_Store.AutoStage == nil or ChatLootBidder_Store.AutoStage
-  ChatLootBidder_Store.BidAnnounce = ChatLootBidder_Store.BidAnnounce or false
-  ChatLootBidder_Store.BidSummary = ChatLootBidder_Store.BidSummary == true
+  ChatLootBidder_Store.RollAnnounce = DefaultTrue(ChatLootBidder_Store.RollAnnounce)
+  ChatLootBidder_Store.AutoStage = DefaultTrue(ChatLootBidder_Store.AutoStage)
+  ChatLootBidder_Store.BidAnnounce = DefaultFalse(ChatLootBidder_Store.BidAnnounce)
+  ChatLootBidder_Store.BidSummary = DefaultFalse(ChatLootBidder_Store.BidSummary)
   ChatLootBidder_Store.BidChannel = ChatLootBidder_Store.BidChannel or "OFFICER"
   ChatLootBidder_Store.SessionAnnounceChannel = ChatLootBidder_Store.SessionAnnounceChannel or "RAID"
   ChatLootBidder_Store.WinnerAnnounceChannel = ChatLootBidder_Store.WinnerAnnounceChannel or "RAID_WARNING"
@@ -49,7 +52,7 @@ local function LoadVariables()
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
   ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "DKP" -- DKP | MSOS
-  ChatLootBidder_Store.BreakTies = ChatLootBidder_Store.BreakTies == nil or ChatLootBidder_Store.BreakTies
+  ChatLootBidder_Store.BreakTies = DefaultTrue(ChatLootBidder_Store.BreakTies)
   ChatLootBidder_Store.AddonVersion = addonVersion
 end
 
@@ -783,7 +786,7 @@ function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
     elseif sessionMode == "DKP" then
       SendResponse("Ignoring your roll of " .. roll .. ". You must first declare that you are rolling on an item first: '[item-link] roll'", name)
     else
-      SendResponse("Ignoring your roll of " .. roll .. ". You must bid on an item before rolling on it.", name)
+      SendResponse("Ignoring your roll of " .. roll .. ". You must bid on an item before rolling on it: '[item-link] ms/os/roll'", name)
     end
 	end
 end
