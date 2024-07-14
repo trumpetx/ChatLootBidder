@@ -63,6 +63,22 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * `/loot end` to end the current loot session.  Winners will be announced to the "Win Channel".  If enabled, a summary will be posted to the "Bid Channel".
   * If there are some roll bids where users did not roll on their own behalf, their rolls will be generated and posted to the "Session Channel" (if enabled) or whispered to them (if disabled)
 
+## Soft Reserve Usage
+### Raid Leader
+Soft Reserves are like an extra meta-session on top of `/loot msos` mode.  The Master Looter can load a Soft Reserve list by executing the command: `/loot sr load` which takes an optional parameter of the list name.  For example, `/loot sr load bwl` will load the "bwl" list (to allow SRs to persist week to week if desired).  Not providing a list name will simply use today's date in the format YY-MM-DD for the list name.
+
+Once the Soft Reserve list is loaded, you can perform the following actions:
+* `/loot sr show` - list out (to the "Session Channel") all current Soft Reserve bids (non-raid members are not listed)
+* `/loot sr lock` - Lock the current Soft Reserve list
+* `/loot sr unlock` - Unock the current Soft Reserve list
+* `/loot sr delete` - Delete the currently loaded Soft Reserve list or `/loot sr delete list-name` to delete the 'list-name' list.
+* `/loot sr unload` - Unload the current list and turn off Soft Reserve functionality.
+* `/loot sr instructions` - Spam basic Soft Reserve instructions to the "Session Channel"
+* `/loot sr edit` - Suspend Soft Reserve functionality and manually edit the loaded list in raw LUA format.  Use this mode for mass importing Soft Reserves from other tools.
+
+### Raiders (getting your SR bids in)
+Whisper the Master Looter in the following format: `/w Masterlooter sr [item-link]`.  If it is successful, a reply will be sent to you.  If you do not have the item to link, you may use plain text, but beware **plain text bids must be EXACT**.  If you use item links, and the Master Looter has configured more than 1 SR, you can send them in at the same time: `/w Master looter sr [item-link-1][item-link-2]`.  If using plain-text bidding, only send 1 Soft Reserve bid at a time.
+
 # Known Issues / FAQ
 * The addon does not handle duplicate items at all.  Due to the data structures to prevent duplicates (using the item link as the key), this will be hard to change in the future.  Master Looters should be aware that this is a known issue and may never change.
 * Looting a boss twice will load the items to the stage twice if a session was not started.
@@ -71,7 +87,7 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * 1.6.0
   * Changed MSOS mode to be the default after a fresh install
   * Added Soft Reserve functionality to MSOS mode
-    * As the loot master, type `/loot sr load` to get started.  You can use defined SR raid names to persist entries from week to week (Ex/ `/loot sr load BWL`).  Valid `sr` subcommands are: `load, unload, delete, show, lock, unlock, instructions`
+    * As the loot master, type `/loot sr load` to get started.  You can use defined SR raid names to persist entries from week to week (Ex/ `/loot sr load BWL`).  Valid `sr` subcommands are: `load, unload, delete, show, lock, unlock, instructions, and edit`
     * When loaded, a Soft Reserve list can accept bids from raiders with: `/w Masterlooter sr [item-link]`.  A precise name in place of a link will work, but there is no validation.  Misspellings will not match future loot drops.
     * When a loot session is started, items that are SR'd will be removed from the MSOS bidding list. SR bidders will be notified via whisper.
     * When the loot session ends, SR items will be announced and/or rolled off.

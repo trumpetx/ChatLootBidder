@@ -321,6 +321,7 @@ local function PlayerWithClassColor(unit)
 end
 
 local function Srs(n)
+  local n = n or softReserveSessionName
   local srs = ChatLootBidder_Store.SoftReserveSessions[n]
   if srs ~= nil then return srs end
   ChatLootBidder_Store.SoftReserveSessions[n] = {}
@@ -329,10 +330,10 @@ end
 
 local function HandleSrRemove(bidder, item)
   local itemName = ParseItemNameFromItemLink(item)
-  if Srs(softReserveSessionName)[bidder] == nil then
-    Srs(softReserveSessionName)[bidder] = {}
+  if Srs()[bidder] == nil then
+    Srs()[bidder] = {}
   end
-  local sr = Srs(softReserveSessionName)[bidder]
+  local sr = Srs()[bidder]
   local i, v
   for i,v in pairs(sr) do
     if v == itemName then
@@ -612,7 +613,7 @@ end
 
 local function HandleSrLoad(providedName)
   softReserveSessionName = providedName or date("%y-%m-%d")
-  Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(Srs(softReserveSessionName)) .. " players with soft reserves")
+  Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(Srs()) .. " players with soft reserves")
 end
 
 local function HandleSrUnload()
@@ -628,7 +629,7 @@ local function HandleSrShow()
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
-    local srs = Srs(softReserveSessionName)
+    local srs = Srs()
     if IsTableEmpty(srs) then
       Error("No Soft Reserves placed yet")
       return
@@ -684,12 +685,29 @@ local InitSlashCommands = function()
       local subcommand = commandlist[2]
       if commandlist[2] == "load" then
         HandleSrLoad(commandlist[3])
+        SrEditFrame:Hide()
       elseif commandlist[2] == "unload" then
         HandleSrUnload()
+        SrEditFrame:Hide()
       elseif commandlist[2] == "delete" then
         HandleSrDelete(commandlist[3])
+        if commandlist[3] == nil or commandlist[3] == softReserveSessionName then
+          SrEditFrame:Hide()
+        end
       elseif commandlist[2] == "show" then
         HandleSrShow()
+      elseif commandlist[2] == nil or commandlist[2] == "edit" then
+        if softReserveSessionName == nil then
+          Error("No Soft Reserve list is loaded")
+        elseif not SrEditFrame:IsVisible() then
+          SrEditFrame:Show()
+          local encoded = string.gsub(json.encode(Srs()), "{", "{\n")
+          encoded = string.gsub(encoded, "}", "\n}")
+          encoded = string.gsub(encoded, "],", "],\n")
+          SrEditFrameText:SetText(encoded)
+        else
+          SrEditFrame:Hide()
+        end
       elseif commandlist[2] == "lock" or commandlist[2] == "unlock" then
         if softReserveSessionName == nil then
           Error("No Soft Reserve session loaded")
@@ -835,6 +853,8 @@ function ChatFrame_OnEvent(event)
       SendResponse("There is no Soft Reserve session loaded", bidder)
       return
     end
+    -- If we're manually editing the SRs, treat it like being locked for incoming additions
+    local softReservesLocked = softReservesLocked or SrEditFrame:IsVisible()
     if TableLength(commandlist) == 1 or softReservesLocked then
       -- skip, query do the query at the end
     elseif commandlist[2] == "clear" or commandlist[2] == "delete" or commandlist[2] == "remove" then
@@ -1072,4 +1092,36 @@ function ChatLootBidder.LOOT_OPENED()
     end
   end
   ChatLootBidder:RedrawStage()
+end
+
+function ChatLootBidder:JsonSave(jsonText, parent)
+  local t = json.decode(jsonText)
+  ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName] = t
+  parent:Hide()
+end
+
+function ChatLootBidder:OnVerticalScroll(scrollFrame)
+	local offset = scrollFrame:GetVerticalScroll();
+	local scrollbar = getglobal(scrollFrame:GetName().."ScrollBar");
+
+	scrollbar:SetValue(offset);
+	local min, max = scrollbar:GetMinMaxValues();
+	local display = false;
+	if ( offset == 0 ) then
+	    getglobal(scrollbar:GetName().."ScrollUpButton"):Disable();
+	else
+	    getglobal(scrollbar:GetName().."ScrollUpButton"):Enable();
+	    display = true;
+	end
+	if ((scrollbar:GetValue() - max) == 0) then
+	    getglobal(scrollbar:GetName().."ScrollDownButton"):Disable();
+	else
+	    getglobal(scrollbar:GetName().."ScrollDownButton"):Enable();
+	    display = true;
+	end
+	if ( display ) then
+		scrollbar:Show();
+	else
+		scrollbar:Hide();
+	end
 end

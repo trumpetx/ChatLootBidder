@@ -1,0 +1,113 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Frame name="SrEditFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
+    <Size><AbsDimension x="420" y="400"/></Size>
+    <Anchors><Anchor point="TOP"><Offset><AbsDimension x="0" y="-100"/></Offset></Anchor></Anchors>
+    <Layers>
+    </Layers>
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
+              edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+      <BackgroundInsets>
+        <AbsInset left="11" right="12" top="12" bottom="11"/>
+      </BackgroundInsets>
+      <TileSize>
+        <AbsValue val="32"/>
+      </TileSize>
+      <EdgeSize>
+        <AbsValue val="32"/>
+      </EdgeSize>
+    </Backdrop>
+        <Frames>
+          <ScrollFrame name="SrEditFrameScrollFrame" inherits="UIPanelScrollFrameTemplate">
+            <Size>
+              <AbsDimension x="372" y="335"/>
+            </Size>
+            <Anchors><Anchor point="TOPLEFT" relativeTo="SrEditFrame" relativePoint="TOPLEFT"><Offset><AbsDimension x="15" y="-25"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnVerticalScroll>
+						SrEditFrameScrollFrame:SetVerticalScroll(arg1)
+						ChatLootBidderFrame:OnVerticalScroll(this);
+					</OnVerticalScroll>
+					<OnShow>
+						ChatLootBidderFrame:OnVerticalScroll(this);
+					</OnShow>
+					<OnLoad>
+						this.scrollBarHideable = 1
+					</OnLoad>
+				</Scripts>
+            <ScrollChild>
+              <EditBox name="SrEditFrameText" multiLine="true" nonspacewrap="true" spacing="1" autoFocus="false">
+                <Size>
+                  <AbsDimension x="375" y="335"/>
+                </Size>
+                <Scripts>
+                  <OnLoad>
+                    this.GetCursorPosition = function(this)
+                        return 0
+                    end
+                    this.cursorOffset = 0
+                    this.cursorHeight = 0
+                  </OnLoad>
+                  <OnEscapePressed>
+                    this:ClearFocus();
+                  </OnEscapePressed>
+                  <OnTextChanged>
+                    this:GetParent():UpdateScrollChildRect()
+                  </OnTextChanged>
+                  <OnCursorChanged>
+                    this.cursorOffset = arg2
+                    this.cursorHeight = arg4
+                  </OnCursorChanged>
+                  <OnUpdate>
+                    ScrollingEdit_OnUpdate()
+                  </OnUpdate>
+                </Scripts>
+                <FontString inherits="GameFontNormal"/>
+              </EditBox>
+            </ScrollChild>
+          </ScrollFrame>
+          <Button name="$parentCloseButton" inherits="UIPanelCloseButton" text="">
+            <Size><AbsDimension x="28" y="28"/></Size>
+            <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+            <Scripts>
+              <OnClick>
+                this:GetParent():Hide()
+              </OnClick>
+            </Scripts>
+          </Button>
+          <Button name="$parentSaveButton" inherits="GameMenuButtonTemplate" text="Save">
+            <Size><AbsDimension x="100" y="30"/></Size>
+            <Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent"><Offset><AbsDimension x="-10" y="12"/></Offset></Anchor></Anchors>
+            <Scripts>
+              <OnClick>
+                ChatLootBidderFrame:JsonSave(SrEditFrameText:GetText(), this:GetParent())
+              </OnClick>
+            </Scripts>
+          </Button>
+        </Frames>
+    <Scripts>
+    <OnLoad>
+      this:RegisterForDrag("LeftButton")
+    </OnLoad>
+    <OnHide>
+      this:StopMovingOrSizing()
+    </OnHide>
+    <OnDragStart>
+      if arg1 == "LeftButton" then
+        this:SetMovable(true)
+        this:StartMoving()
+      end
+    </OnDragStart>
+    <OnDragStop>
+      this:StopMovingOrSizing()
+    </OnDragStop>
+    <OnMouseUp>
+      if arg1 == "LeftButton" and this:IsVisible() then
+        this:StopMovingOrSizing()
+        this:SetMovable(false)
+      end
+    </OnMouseUp>
+    </Scripts>
+  </Frame>
+</Ui>
