@@ -52,6 +52,7 @@ local function LoadVariables()
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
+  ChatLootBidder_Store.MaxRarity = ChatLootBidder_Store.MaxRarity or 5
   ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "MSOS" -- DKP | MSOS
   ChatLootBidder_Store.BreakTies = DefaultTrue(ChatLootBidder_Store.BreakTies)
   ChatLootBidder_Store.AddonVersion = addonVersion
@@ -135,7 +136,7 @@ local ShowInfo = function()
   Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
   Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
   Message("Auto-stage is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
-  Message("Auto-stage loot level is set to " .. ChatLootBidder_Store.MinRarity .. " (0=gray - 5=legendary)")
+  Message("Auto-stage loot level is set to min=" .. ChatLootBidder_Store.MinRarity .. ", max=" .. ChatLootBidder_Store.MaxRarity .. " (0=gray - 5=legendary)")
   Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
   Message("Break Ties mode (DKP only) is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
 	if ChatLootBidder_Store.DebugLevel > 0 then Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel) end
@@ -659,13 +660,15 @@ local InitSlashCommands = function()
       ChatLootBidder_Store.AutoStage = not ChatLootBidder_Store.AutoStage
       Message("Auto-Stage mode is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
     elseif commandlist[1] == "autostageloot" then
-      local lootLevel = ToWholeNumber(commandlist[2], -1)
-      if lootLevel > 5 or lootLevel < 0 then
-        Error("Provide a loot-level 0 - 5")
+      local min = ToWholeNumber(commandlist[2], -1)
+      local max = ToWholeNumber(commandlist[3], -1)
+      if min > 5 or min < 0 or max > 5 or max < 0 then
+        Error("Provide a loot-level range (inclusive): /loot autostageloot 4 4")
       else
-        ChatLootBidder_Store.MinRarity = lootLevel
+        ChatLootBidder_Store.MinRarity = min
+        ChatLootBidder_Store.MaxRarity = max
       end
-      Message("Auto-stage loot level is set to " .. ChatLootBidder_Store.MinRarity .. " (0=gray - 5=legendary)")
+      Message("Auto-stage loot level is set to min=" .. ChatLootBidder_Store.MinRarity .. ", max=" .. ChatLootBidder_Store.MaxRarity .. " (0=gray - 5=legendary)")
     elseif commandlist[1] == "breakties" then
       ChatLootBidder_Store.BreakTies = not ChatLootBidder_Store.BreakTies
       Message("Break Ties mode is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
@@ -1064,7 +1067,7 @@ function ChatLootBidder.LOOT_OPENED()
   for i=1, GetNumLootItems() do
     local lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive = GetLootSlotInfo(i)
     -- print(lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive)
-    if rarity >= ChatLootBidder_Store.MinRarity then
+    if rarity >= ChatLootBidder_Store.MinRarity and rarity <= ChatLootBidder_Store.MaxRarity then
       ChatLootBidder:Stage(GetLootSlotLink(i))
     end
   end

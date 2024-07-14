@@ -32,7 +32,7 @@ Most configuration should be set to a reasonable default.  When setting channel 
 * `/loot maxbid 10000` Sets the max bid value at 10000 instead of the default: 5000.  You can thank very mean raiders for the need to create this setting :P.
   * The minimum bid is not settable via the interactive chat, but you can modify it in your addon lua settings.  It is 1 by default.
 * `/loot autostage` Toggle the 'auto-stage' mode which pops up a staging window when you loot a boss
-* `/loot autostageloot` Sets the loot level when auto-staging loot in the GUI window 0-5 (gray-legendary, 4 by default)
+* `/loot autostageloot 4 5` Sets the loot level when auto-staging loot in the GUI window 0-5 (gray-legendary); min=4, max=5 by default
 * `/loot breakties` (on by default) only used by DKP mode to optionally (not) break ties for bids and let the ML looter decide how to proceed.  Breaking ties uses `/random 100` to break ties while displaying the end result to the raid.
 * `/loot dkp` to change to DKP mode (on by default)
   * This mode uses maxbid/minbid and parses numbers sent by raiders to determine who wins a given loot item
@@ -75,6 +75,7 @@ Most configuration should be set to a reasonable default.  When setting channel 
     * When loaded, a Soft Reserve list can accept bids from raiders with: `/w Masterlooter sr [item-link]`.  A precise name in place of a link will work, but there is no validation.  Misspellings will not match future loot drops.
     * When a loot session is started, items that are SR'd will be removed from the MSOS bidding list. SR bidders will be notified via whisper.
     * When the loot session ends, SR items will be announced and/or rolled off.
+  * Modified `/loot autostageloot` so that it takes it 2 parameters (min and max) so you can effectively filter out legendary drops and do epics only like this: `/loot autostageloot 4 4`
 * 1.5.2
   * Added the "Mode" (MSOS or DKP) to the Stage GUI frame for the Master Looter's reference
 * 1.5.1
