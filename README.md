@@ -94,6 +94,7 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
     * When loaded, a Soft Reserve list can accept bids from raiders with: `/w Masterlooter sr [item-link]`.  A precise name in place of a link will work, but there is no validation.  Misspellings will not match future loot drops.
     * When a loot session is started, items that are SR'd will be removed from the MSOS bidding list. SR bidders will be notified via whisper.
     * When the loot session ends, SR items will be announced and/or rolled off.
+    * Ability to import/export with various formats: csv, json, semicolon, raidresfly (Ex/ `/loot sr json`)
   * Modified `/loot autostageloot` so that it takes it 2 parameters (min and max) so you can effectively filter out legendary drops and do epics only like this: `/loot autostageloot 4 4`
 * 1.5.2
   * Added the "Mode" (MSOS or DKP) to the Stage GUI frame for the Master Looter's reference
