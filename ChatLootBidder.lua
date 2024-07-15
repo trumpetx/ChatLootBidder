@@ -752,7 +752,7 @@ local InitSlashCommands = function()
           Error("No Soft Reserve list is loaded")
         elseif not SrEditFrame:IsVisible() then
           SrEditFrame:Show()
-          local encoded
+          local encoded = ""
           for k,v in pairs(Srs()) do
             encoded = encoded .. k
             for _, sr in pairs(v) do
