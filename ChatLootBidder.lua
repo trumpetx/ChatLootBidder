@@ -754,7 +754,7 @@ local InitSlashCommands = function()
           SrEditFrame:Show()
           local encoded
           for k,v in pairs(Srs()) do
-            encoded = k
+            encoded = encoded .. k
             for _, sr in pairs(v) do
               encoded = encoded .. " ; " .. sr
             end
@@ -1161,7 +1161,6 @@ end
 local function ParseRaidResFly(text)
   local line, t = nil, {}
   for line in gfind(text, '([^\n]+)') do
-    print(line)
     local _, _, name, item = string.find(line, "^.-: ([%a]-) . (.-)$")
     name = Trim(name)
     item = Trim(item)
