@@ -81,7 +81,7 @@
             <Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent"><Offset><AbsDimension x="-10" y="12"/></Offset></Anchor></Anchors>
             <Scripts>
               <OnClick>
-                ChatLootBidderFrame:JsonSave(SrEditFrameText:GetText(), this:GetParent())
+                ChatLootBidderFrame:DecodeAndSave(SrEditFrameText:GetText(), this:GetParent())
               </OnClick>
             </Scripts>
           </Button>

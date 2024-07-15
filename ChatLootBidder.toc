@@ -8,7 +8,10 @@
 ChatThrottleLib.lua
 VersionUtil.lua
 
+csv.lua
+json.lua
+
 SrEdit.xml
 ChatLootBidder.xml
-json.lua
+
 ChatLootBidder.lua

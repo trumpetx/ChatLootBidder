@@ -696,7 +696,7 @@ local InitSlashCommands = function()
         end
       elseif commandlist[2] == "show" then
         HandleSrShow()
-      elseif commandlist[2] == nil or commandlist[2] == "edit" then
+      elseif commandlist[2] == "json" then
         if softReserveSessionName == nil then
           Error("No Soft Reserve list is loaded")
         elseif not SrEditFrame:IsVisible() then
@@ -705,6 +705,25 @@ local InitSlashCommands = function()
           encoded = string.gsub(encoded, "}", "\n}")
           encoded = string.gsub(encoded, "],", "],\n")
           SrEditFrameText:SetText(encoded)
+          SrEditFrameText.encoding="json"
+        else
+          SrEditFrame:Hide()
+        end
+      elseif commandlist[2] == "semicolon" then
+        if softReserveSessionName == nil then
+          Error("No Soft Reserve list is loaded")
+        elseif not SrEditFrame:IsVisible() then
+          SrEditFrame:Show()
+          local encoded
+          for k,v in pairs(Srs()) do
+            encoded = k
+            for _, sr in pairs(v) do
+              encoded = encoded .. " ; " .. sr
+            end
+            encoded = encoded .. "\n"
+          end
+          SrEditFrameText:SetText(encoded)
+          SrEditFrameText.encoding="semicolon"
         else
           SrEditFrame:Hide()
         end
@@ -721,7 +740,7 @@ local InitSlashCommands = function()
         MessageStartChannel("Clear your current SR: /w " .. PlayerWithClassColor(me) .. " sr clear")
       else
         Error("Unknown 'sr' subcommand: " .. (commandlist[2] == nil and "nil" or commandlist[2]))
-        Error("Valid values are: load, unload, delete, show, lock, unlock, add, instructions")
+        Error("Valid values are: load, unload, delete, show, lock, unlock, json, semicolon, instructions")
       end
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
@@ -1094,8 +1113,35 @@ function ChatLootBidder.LOOT_OPENED()
   ChatLootBidder:RedrawStage()
 end
 
-function ChatLootBidder:JsonSave(jsonText, parent)
-  local t = json.decode(jsonText)
+local function Trim(str)
+  local _start, _end, _match = string.find(str, '^%s*(.-)%s*$')
+  return _match or ""
+end
+
+function ChatLootBidder:DecodeAndSave(text, parent)
+  local t
+  if SrEditFrameText.encoding == "json" then
+    t = json.decode(text)
+  elseif SrEditFrameText.encoding == "semicolon" then
+    local line, part, k, v = nil, nil, nil, {}
+    t = {}
+    for line in gfind(text, '([^\n]+)') do
+      for part in gfind(line, '([^;]+)') do
+        if k == nil then
+          k = Trim(part)
+        else
+          local sr = Trim(part)
+          table.insert(v, sr)
+        end
+      end
+      t[k] = v
+      k = nil
+      v = {}
+    end
+  else
+    Error("No encoding provided")
+    return
+  end
   ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName] = t
   parent:Hide()
 end

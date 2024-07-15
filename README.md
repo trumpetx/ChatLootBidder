@@ -74,7 +74,8 @@ Once the Soft Reserve list is loaded, you can perform the following actions:
 * `/loot sr delete` - Delete the currently loaded Soft Reserve list or `/loot sr delete list-name` to delete the 'list-name' list.
 * `/loot sr unload` - Unload the current list and turn off Soft Reserve functionality.
 * `/loot sr instructions` - Spam basic Soft Reserve instructions to the "Session Channel"
-* `/loot sr edit` - Suspend Soft Reserve functionality and manually edit the loaded list in raw LUA format.  Use this mode for mass importing Soft Reserves from other tools.
+* `/loot sr json` - Suspend Soft Reserve functionality and manually edit the loaded list in raw JSON format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
+* `/loot sr semicolon` - Suspend Soft Reserve functionality and manually edit the loaded list in raw semicolon-separated format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
 
 ### Raiders (getting your SR bids in)
 Whisper the Master Looter in the following format: `/w Masterlooter sr [item-link]`.  If it is successful, a reply will be sent to you.  If you do not have the item to link, you may use plain text, but beware **plain text bids must be EXACT**.  If you use item links, and the Master Looter has configured more than 1 SR, you can send them in at the same time: `/w Master looter sr [item-link-1][item-link-2]`.  If using plain-text bidding, only send 1 Soft Reserve bid at a time.
