@@ -74,7 +74,7 @@ local function encode_table(val, stack)
       end
       n = n + 1
     end
-    if n ~= #val then
+    if n ~= getn(val) then
       error("invalid table: sparse array")
     end
     -- Encode
@@ -142,18 +142,18 @@ end
 
 local parse
 
-local function create_set(...)
-  local res = {}
-  for i = 1, select("#", ...) do
-    res[ select(i, ...) ] = true
+local function create_set(values)
+  local res, v = {}, nil
+  for _, v in pairs(values) do
+    res[v] = true
   end
   return res
 end
 
-local space_chars   = create_set(" ", "\t", "\r", "\n")
-local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
-local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
-local literals      = create_set("true", "false", "null")
+local space_chars   = create_set({" ", "\t", "\r", "\n"})
+local delim_chars   = create_set({" ", "\t", "\r", "\n", "]", "}", ","})
+local escape_chars  = create_set({"\\", "/", '"', "b", "f", "n", "r", "t", "u"})
+local literals      = create_set({"true", "false", "null"})
 
 local literal_map = {
   [ "true"  ] = true,
@@ -163,12 +163,12 @@ local literal_map = {
 
 
 local function next_char(str, idx, set, negate)
-  for i = idx, #str do
+  for i = idx, getn(str) do
     if set[str:sub(i, i)] ~= negate then
       return i
     end
   end
-  return #str + 1
+  return getn(str) + 1
 end
 
 
@@ -189,15 +189,14 @@ end
 local function codepoint_to_utf8(n)
   -- http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=iws-appendixa
   local f = math.floor
-  if n <= 0x7f then
+  if n <= tonumber("0x7f") then
     return string.char(n)
-  elseif n <= 0x7ff then
-    return string.char(f(n / 64) + 192, n % 64 + 128)
-  elseif n <= 0xffff then
-    return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
-  elseif n <= 0x10ffff then
-    return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
-                       f(n % 4096 / 64) + 128, n % 64 + 128)
+  elseif n <= tonumber("0x7ff") then
+    return string.char(f(n / 64) + 192, math.mod(n, 64) + 128)
+  elseif n <= tonumber("0xffff") then
+    return string.char(f(n / 4096) + 224, f(math.mod(n, 4096) / 64) + 128, math.mod(n, 64) + 128)
+  elseif n <= tonumber("0x10ffff") then
+    return string.char(f(n / 262144) + 240, f(math.mod(n, 262144) / 4096) + 128, f(math.mod(n, 4096) / 64) + 128, math.mod(n, 64) + 128)
   end
   error( string.format("invalid unicode codepoint '%x'", n) )
 end
@@ -208,7 +207,7 @@ local function parse_unicode_escape(s)
   local n2 = tonumber( s:sub(7, 10), 16 )
    -- Surrogate pair?
   if n2 then
-    return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+    return codepoint_to_utf8((n1 - tonumber("0xd800")) * tonumber("0x400") + (n2 - tonumber("0xdc00")) + tonumber("0x10000"))
   else
     return codepoint_to_utf8(n1)
   end
@@ -220,7 +219,7 @@ local function parse_string(str, i)
   local j = i + 1
   local k = j
 
-  while j <= #str do
+  while j <= getn(str) do
     local x = str:byte(j)
 
     if x < 32 then
@@ -235,7 +234,7 @@ local function parse_string(str, i)
                  or str:match("^%x%x%x%x", j + 1)
                  or decode_error(str, j - 1, "invalid unicode escape in string")
         res = res .. parse_unicode_escape(hex)
-        j = j + #hex
+        j = j + getn(hex)
       else
         if not escape_chars[c] then
           decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
@@ -378,7 +377,7 @@ function json.decode(str)
   end
   local res, idx = parse(str, next_char(str, 1, space_chars, true))
   idx = next_char(str, idx, space_chars, true)
-  if idx <= #str then
+  if idx <= getn(str) then
     decode_error(str, idx, "trailing garbage")
   end
   return res
