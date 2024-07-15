@@ -184,8 +184,36 @@ local function IsTableEmpty(tbl)
   return next(tbl) == nil
 end
 
+-- Flatten a Player: [ SR1, SR2 ] structure into: { [Player, SR1], [Player, SR2] }
+local function Flatten(tbl)
+  if tbl == nil then return {} end
+  local flattened = {}
+  local k, arr, v
+  for k, arr in pairs(tbl) do
+    for _,v in pairs(arr) do
+      table.insert(flattened, { k, v })
+    end
+  end
+  return flattened
+end
+
+-- Take a [[Player, SR1], [Player, SR2]] data structure and Map it: { Player: [ SR1, SR2 ] }
+local function UnFlatten(tbl)
+  if tbl == nil then return {} end
+  local unflattened = {}
+  local arr
+  for _, arr in pairs(tbl) do
+    if unflattened[arr[1]] == nil then unflattened[arr[1]] = {} end
+    if arr[2] ~= nil then
+      table.insert(unflattened[arr[1]], arr[2])
+    end
+  end
+  return unflattened
+end
+
 local function TableContains(table, element)
-  for _, value in pairs(table) do
+  local value
+  for _,value in pairs(table) do
     if value == element then
       return true
     end
@@ -616,9 +644,11 @@ local function HandleSrShow()
       return
     end
     MessageStartChannel("Soft Reserve Bids:")
-    table.sort(srs)
+    local keys = GetKeys(srs)
+    table.sort(keys)
     local player
-    for player,sr in pairs(srs) do
+    for _, player in pairs(keys) do
+      local sr = srs[player]
       if IsInRaid(player) and not IsTableEmpty(sr) then
         MessageStartChannel(PlayerWithClassColor(player) .. ": " .. table.concat(sr, ", "))
       end
@@ -677,6 +707,17 @@ local InitSlashCommands = function()
         end
       elseif commandlist[2] == "show" then
         HandleSrShow()
+      elseif commandlist[2] == "csv" then
+        if softReserveSessionName == nil then
+          Error("No Soft Reserve list is loaded")
+        elseif not SrEditFrame:IsVisible() then
+          SrEditFrame:Show()
+          local encoded = csv:toCSV(Flatten(Srs()))
+          SrEditFrameText:SetText(encoded)
+          SrEditFrameText.encoding="csv"
+        else
+          SrEditFrame:Hide()
+        end
       elseif commandlist[2] == "json" then
         if softReserveSessionName == nil then
           Error("No Soft Reserve list is loaded")
@@ -1103,6 +1144,8 @@ function ChatLootBidder:DecodeAndSave(text, parent)
   local t
   if SrEditFrameText.encoding == "json" then
     t = json.decode(text)
+  elseif SrEditFrameText.encoding == "csv" then
+    t = UnFlatten(csv:fromCSV(text))
   elseif SrEditFrameText.encoding == "semicolon" then
     local line, part, k, v = nil, nil, nil, {}
     t = {}
@@ -1127,6 +1170,8 @@ function ChatLootBidder:DecodeAndSave(text, parent)
   parent:Hide()
 end
 
+--
+-- Taken from https://github.com/laytya/WowLuaVanilla which took it from SuperMacro
 function ChatLootBidder:OnVerticalScroll(scrollFrame)
 	local offset = scrollFrame:GetVerticalScroll();
 	local scrollbar = getglobal(scrollFrame:GetName().."ScrollBar");

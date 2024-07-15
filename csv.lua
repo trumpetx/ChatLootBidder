@@ -1,8 +1,15 @@
+CSV_VERSION = "2020.09.22"
+
+if csv and (csv.version >= CSV_VERSION) then return end
+csv = {}
+csv.version = CSV_VERSION
+local gfind = string.gmatch or string.gfind
+--
 -- http://lua-users.org/wiki/CsvUtils
-local csv { _version = "2020.09.22" }
+--
 
 -- Used to escape "'s by toCSV
-function csv.escapeCSV(s)
+local function escapeCSV(s)
   if string.find(s, '[,"]') then
     s = '"' .. string.gsub(s, '"', '""') .. '"'
   end
@@ -10,7 +17,7 @@ function csv.escapeCSV(s)
 end
 
 -- Convert from CSV string to table (converts a single line of a CSV file)
-function csv.fromCSV(s)
+local function lineFromCSV(s)
   s = s .. ','        -- ending comma
   local t = {}        -- table to collect fields
   local fieldstart = 1
@@ -34,17 +41,31 @@ function csv.fromCSV(s)
     end
   until fieldstart > string.len(s)
   return t
-end=
+end
 
 -- Convert from table to CSV string
-function csv.toCSV(tt)
+local function lineToCSV(tt)
   local s = ""
 -- ChM 23.02.2014: changed pairs to ipairs
 -- assumption is that fromCSV and toCSV maintain data as ordered array
-  for _,p in ipairs(tt) do
+  for _,p in pairs(tt) do
     s = s .. "," .. escapeCSV(p)
   end
   return string.sub(s, 2)      -- remove first comma
 end
 
-return csv
+function csv:toCSV(flatTable)
+  local doc = ""
+  for _,line in pairs(flatTable) do
+    doc = doc .. lineToCSV(line) .. "\n"
+  end
+  return doc
+end
+
+function csv:fromCSV(doc)
+  local flatTable = {}
+  for line in gfind(doc, '([^\n]+)') do
+    table.insert(flatTable, lineFromCSV(line))
+  end
+  return flatTable
+end
