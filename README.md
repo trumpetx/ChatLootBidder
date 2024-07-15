@@ -77,6 +77,7 @@ Once the Soft Reserve list is loaded, you can perform the following actions:
 * `/loot sr json` - Suspend Soft Reserve functionality and manually edit the loaded list in raw JSON format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
 * `/loot sr semicolon` - Suspend Soft Reserve functionality and manually edit the loaded list in raw semicolon-separated format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
 * `/loot sr csv` - Suspend Soft Reserve functionality and manually edit the loaded list in csv format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
+* `/loot sr raidresfly` - Suspend Soft Reserve functionality and manually edit the loaded list in [RaidRes.Fly](https://raidres.fly.dev) format.  There is no website import, but you can use the website export to import to this addon.
 
 ### Raiders (getting your SR bids in)
 Whisper the Master Looter in the following format: `/w Masterlooter sr [item-link]`.  If it is successful, a reply will be sent to you.  If you do not have the item to link, you may use plain text, but beware **plain text bids must be EXACT**.  If you use item links, and the Master Looter has configured more than 1 SR, you can send them in at the same time: `/w Master looter sr [item-link-1][item-link-2]`.  If using plain-text bidding, only send 1 Soft Reserve bid at a time.

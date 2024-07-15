@@ -707,6 +707,22 @@ local InitSlashCommands = function()
         end
       elseif commandlist[2] == "show" then
         HandleSrShow()
+      elseif commandlist[2] == "raidresfly" then
+        if softReserveSessionName == nil then
+          Error("No Soft Reserve list is loaded")
+        elseif not SrEditFrame:IsVisible() then
+          SrEditFrame:Show()
+          local encoded = ""
+          local flat = Flatten(Srs())
+          for _,arr in flat do
+            -- [00:00]Autozhot: Autozhot - Band of Accuria
+            encoded = encoded .. "[00:00]"..arr[1]..": "..arr[1].." - "..arr[2].."\n"
+          end
+          SrEditFrameText:SetText(encoded)
+          SrEditFrameText.encoding="raidresfly"
+        else
+          SrEditFrame:Hide()
+        end
       elseif commandlist[2] == "csv" then
         if softReserveSessionName == nil then
           Error("No Soft Reserve list is loaded")
@@ -1140,28 +1156,50 @@ local function Trim(str)
   return _match or ""
 end
 
+
+-- [00:00]Autozhot: Autozhot - Band of Accuria
+local function ParseRaidResFly(text)
+  local line, t = nil, {}
+  for line in gfind(text, '([^\n]+)') do
+    print(line)
+    local _, _, name, item = string.find(line, "^.-: ([%a]-) . (.-)$")
+    name = Trim(name)
+    item = Trim(item)
+    if t[name] == nil then t[name] = {} end
+    table.insert(t[name], item)
+  end
+  return t
+end
+
+-- Autozhot ; Band of Accuria ; Giantstalker Boots
+local function ParseSemicolon(text)
+  local t, line, part, k, v = {}, nil, nil, nil, {}
+  for line in gfind(text, '([^\n]+)') do
+    for part in gfind(line, '([^;]+)') do
+      if k == nil then
+        k = Trim(part)
+      else
+        local sr = Trim(part)
+        table.insert(v, sr)
+      end
+    end
+    t[k] = v
+    k = nil
+    v = {}
+  end
+  return t
+end
+
 function ChatLootBidder:DecodeAndSave(text, parent)
   local t
   if SrEditFrameText.encoding == "json" then
     t = json.decode(text)
   elseif SrEditFrameText.encoding == "csv" then
     t = UnFlatten(csv:fromCSV(text))
+  elseif SrEditFrameText.encoding == "raidresfly" then
+    t = ParseRaidResFly(text)
   elseif SrEditFrameText.encoding == "semicolon" then
-    local line, part, k, v = nil, nil, nil, {}
-    t = {}
-    for line in gfind(text, '([^\n]+)') do
-      for part in gfind(line, '([^;]+)') do
-        if k == nil then
-          k = Trim(part)
-        else
-          local sr = Trim(part)
-          table.insert(v, sr)
-        end
-      end
-      t[k] = v
-      k = nil
-      v = {}
-    end
+    t = ParseSemicolon(text)
   else
     Error("No encoding provided")
     return
