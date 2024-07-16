@@ -753,7 +753,7 @@ local InitSlashCommands = function()
             encoded = EncodeRaidResFly()
           end
           SrEditFrameText:SetText(encoded)
-          SrEditFrameText.encoding=commandlist[2]
+          SrEditFrameHeaderString:SetText(commandlist[2])
         else
           SrEditFrame:Hide()
         end
@@ -1182,14 +1182,15 @@ local function ParseSemicolon(text)
 end
 
 function ChatLootBidder:DecodeAndSave(text, parent)
+  local encoding = SrEditFrameHeaderString:GetText()
   local t
-  if SrEditFrameText.encoding == "json" then
+  if encoding == "json" then
     t = json.decode(text)
-  elseif SrEditFrameText.encoding == "csv" then
+  elseif encoding == "csv" then
     t = UnFlatten(csv:fromCSV(text))
-  elseif SrEditFrameText.encoding == "raidresfly" then
+  elseif encoding == "raidresfly" then
     t = ParseRaidResFly(text)
-  elseif SrEditFrameText.encoding == "semicolon" then
+  elseif encoding == "semicolon" then
     t = ParseSemicolon(text)
   else
     Error("No encoding provided")
