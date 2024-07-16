@@ -656,6 +656,36 @@ local function HandleSrShow()
   end
 end
 
+local function EncodeSemicolon()
+  local encoded = ""
+  for k,v in pairs(Srs()) do
+    encoded = encoded .. k
+    for _, sr in pairs(v) do
+      encoded = encoded .. " ; " .. sr
+    end
+    encoded = encoded .. "\n"
+  end
+  return encoded
+end
+
+local function EncodeRaidResFly()
+  local encoded = ""
+  local flat = Flatten(Srs())
+  for _,arr in flat do
+    -- [00:00]Autozhot: Autozhot - Band of Accuria
+    encoded = (encoded or "") .. "[00:00]"..arr[1]..": "..arr[1].." - "..arr[2].."\n"
+  end
+  return encoded
+end
+
+-- This is the most simple pretty print function possible applciable to { key : [value, value, value] } structures only
+local function PrettyPrintJson(encoded)
+  encoded = string.gsub(encoded, "{", "{\n")
+  encoded = string.gsub(encoded, "}", "\n}")
+  encoded = string.gsub(encoded, "],", "],\n")
+  return encoded
+end
+
 local InitSlashCommands = function()
 	SLASH_ChatLootBidder1, SLASH_ChatLootBidder2 = "/l", "/loot"
 	SlashCmdList["ChatLootBidder"] = function(message)
@@ -707,61 +737,23 @@ local InitSlashCommands = function()
         end
       elseif commandlist[2] == "show" then
         HandleSrShow()
-      elseif commandlist[2] == "raidresfly" then
+      elseif commandlist[2] == "csv" or commandlist[2] == "json" or commandlist[2] == "semicolon" or commandlist[2] == "raidresfly" then
         if softReserveSessionName == nil then
           Error("No Soft Reserve list is loaded")
         elseif not SrEditFrame:IsVisible() then
           SrEditFrame:Show()
-          local encoded = ""
-          local flat = Flatten(Srs())
-          for _,arr in flat do
-            -- [00:00]Autozhot: Autozhot - Band of Accuria
-            encoded = encoded .. "[00:00]"..arr[1]..": "..arr[1].." - "..arr[2].."\n"
+          local encoded
+          if commandlist[2] == "csv" then
+            encoded = csv:toCSV(Flatten(Srs()))
+          elseif commandlist[2] == "json" then
+            encoded = PrettyPrintJson(json.encode(Srs()))
+          elseif commandlist[2] == "semicolon" then
+            encoded = EncodeSemicolon()
+          elseif commandlist[2] == "raidresfly" then
+            encoded = EncodeRaidResFly()
           end
           SrEditFrameText:SetText(encoded)
-          SrEditFrameText.encoding="raidresfly"
-        else
-          SrEditFrame:Hide()
-        end
-      elseif commandlist[2] == "csv" then
-        if softReserveSessionName == nil then
-          Error("No Soft Reserve list is loaded")
-        elseif not SrEditFrame:IsVisible() then
-          SrEditFrame:Show()
-          local encoded = csv:toCSV(Flatten(Srs()))
-          SrEditFrameText:SetText(encoded)
-          SrEditFrameText.encoding="csv"
-        else
-          SrEditFrame:Hide()
-        end
-      elseif commandlist[2] == "json" then
-        if softReserveSessionName == nil then
-          Error("No Soft Reserve list is loaded")
-        elseif not SrEditFrame:IsVisible() then
-          SrEditFrame:Show()
-          local encoded = string.gsub(json.encode(Srs()), "{", "{\n")
-          encoded = string.gsub(encoded, "}", "\n}")
-          encoded = string.gsub(encoded, "],", "],\n")
-          SrEditFrameText:SetText(encoded)
-          SrEditFrameText.encoding="json"
-        else
-          SrEditFrame:Hide()
-        end
-      elseif commandlist[2] == "semicolon" then
-        if softReserveSessionName == nil then
-          Error("No Soft Reserve list is loaded")
-        elseif not SrEditFrame:IsVisible() then
-          SrEditFrame:Show()
-          local encoded = ""
-          for k,v in pairs(Srs()) do
-            encoded = encoded .. k
-            for _, sr in pairs(v) do
-              encoded = encoded .. " ; " .. sr
-            end
-            encoded = encoded .. "\n"
-          end
-          SrEditFrameText:SetText(encoded)
-          SrEditFrameText.encoding="semicolon"
+          SrEditFrameText.encoding=commandlist[2]
         else
           SrEditFrame:Hide()
         end
