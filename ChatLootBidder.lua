@@ -60,7 +60,7 @@ local function LoadVariables()
   ChatLootBidder_Store.AutoRemoveSrAfterWin = DefaultTrue(ChatLootBidder_Store.AutoRemoveSrAfterWin)
   ChatLootBidder_Store.AutoLockSoftReserve = DefaultTrue(ChatLootBidder_Store.AutoLockSoftReserve)
   -- TODO: Make this custom per Soft Reserve session and make this the default when a new list is started
-  ChatLootBidder_Store.DefaultMaxSoftReserves = ChatLootBidder_Store.DefaultMaxSoftReserves or 1
+  ChatLootBidder_Store.DefaultMaxSoftReserves = 1
 end
 
 local function ToWholeNumber(numberString, default)
@@ -242,11 +242,11 @@ local function SplitBySpace(str)
   return commandlist
 end
 
-local function GetKeysWhereValue(tbl, valueFunction)
+local function GetKeysWhere(tbl, fn)
   if tbl == nil then return {} end
   local keys = {}
   for key,value in pairs(tbl) do
-    if valueFunction == nil or valueFunction(value) then
+    if fn == nil or fn(key, value) then
       table.insert(keys, key)
     end
   end
@@ -254,7 +254,7 @@ local function GetKeysWhereValue(tbl, valueFunction)
 end
 
 local function GetKeys(tbl)
-  return GetKeysWhereValue(tbl)
+  return GetKeysWhere(tbl)
 end
 
 local function GetKeysSortedByValue(tbl)
@@ -521,7 +521,7 @@ function ChatLootBidder:Start(items, timer, mode)
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
   local mode = mode ~= nil and mode or ChatLootBidder_Store.DefaultSessionMode
   if session ~= nil then ChatLootBidder:End() end
-  local stageList = GetKeysWhereValue(stage, function(v) return v == true end)
+  local stageList = GetKeysWhere(stage, function(k,v) return v == true end)
   if items == nil then
     items = stageList
   else
@@ -544,7 +544,7 @@ function ChatLootBidder:Start(items, timer, mode)
   local bidAddonMessage = "mode=" .. mode .. ",items="
   for k,i in pairs(items) do
     local itemName = ParseItemNameFromItemLink(i)
-    local srsOnItem = GetKeysWhereValue(srs, function(player) return IsInRaid(player) and TableContains(player, itemName) end)
+    local srsOnItem = GetKeysWhere(srs, function(player, playerSrs) return IsInRaid(player) and TableContains(playerSrs, itemName) end)
     local srLen = TableLength(srsOnItem)
     session[i] = {}
     if srLen == 0 then
@@ -778,7 +778,7 @@ local InitSlashCommands = function()
         MessageStartChannel("Clear your current SR: /w " .. PlayerWithClassColor(me) .. " sr clear")
       else
         Error("Unknown 'sr' subcommand: " .. (commandlist[2] == nil and "nil" or commandlist[2]))
-        Error("Valid values are: load, unload, delete, show, lock, unlock, json, semicolon, instructions")
+        Error("Valid values are: load, unload, delete, show, lock, unlock, json, semicolon, raidresfly, csv, instructions")
       end
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
