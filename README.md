@@ -87,10 +87,12 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.6.1-2
+  * Soft Reserve Bug Fixess
 * 1.6.0
   * Changed MSOS mode to be the default after a fresh install
   * Added Soft Reserve functionality to MSOS mode
-    * As the loot master, type `/loot sr load` to get started.  You can use defined SR raid names to persist entries from week to week (Ex/ `/loot sr load BWL`).  Valid `sr` subcommands are: `load, unload, delete, show, lock, unlock, instructions, and edit`
+    * As the loot master, type `/loot sr load` to get started.  You can use defined SR raid names to persist entries from week to week (Ex/ `/loot sr load BWL`).  Valid `sr` subcommands are: `load, unload, delete, show, lock, unlock, instructions, json, csv, semicolon, and raidresfly`
     * When loaded, a Soft Reserve list can accept bids from raiders with: `/w Masterlooter sr [item-link]`.  A precise name in place of a link will work, but there is no validation.  Misspellings will not match future loot drops.
     * When a loot session is started, items that are SR'd will be removed from the MSOS bidding list. SR bidders will be notified via whisper.
     * When the loot session ends, SR items will be announced and/or rolled off.
