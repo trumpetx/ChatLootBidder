@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
-  <Frame name="SrEditFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
+  <Frame name="ChatLootBidderOptionsFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
     <Size>
       <AbsDimension x="420" y="400"/>
     </Size>
@@ -48,12 +48,12 @@
       </EdgeSize>
     </Backdrop>
     <Frames>
-      <ScrollFrame name="SrEditFrameScrollFrame" inherits="UIPanelScrollFrameTemplate">
+      <ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameTemplate">
         <Size>
           <AbsDimension x="372" y="335"/>
         </Size>
         <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="SrEditFrame" relativePoint="TOPLEFT">
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
               <AbsDimension x="15" y="-25"/>
             </Offset>
@@ -61,7 +61,7 @@
         </Anchors>
         <Scripts>
           <OnVerticalScroll>
-						SrEditFrameScrollFrame:SetVerticalScroll(arg1)
+						ChatLootBidderOptionsFrameScrollFrame:SetVerticalScroll(arg1)
 						ChatLootBidderFrame:OnVerticalScroll(this);
           </OnVerticalScroll>
           <OnShow>
@@ -145,7 +145,7 @@
         this:StopMovingOrSizing()
       </OnHide>
       <OnDragStart>
-      if arg1 == "LeftButton" then
+        if arg1 == "LeftButton" then
           this:SetMovable(true)
           this:StartMoving()
         end

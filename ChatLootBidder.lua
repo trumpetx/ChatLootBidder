@@ -624,7 +624,9 @@ end
 
 local function HandleSrLoad(providedName)
   softReserveSessionName = providedName or date("%y-%m-%d")
-  Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(Srs()) .. " players with soft reserves")
+  local srs = Srs()
+  ValidateAndWarn(srs)
+  Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(srs) .. " players with soft reserves")
 end
 
 local function HandleSrUnload()
@@ -1184,6 +1186,16 @@ local function ParseSemicolon(text)
   return t
 end
 
+function ValidateAndWarn(t)
+  local k,v,len
+  for k,v in pairs(t) do
+    len = getn(v)
+    if len > ChatLootBidder_Store.DefaultMaxSoftReserves then
+      Error(k .. " has " .. len .. " soft reserves loaded (max=" .. ChatLootBidder_Store.DefaultMaxSoftReserves .. ")")
+    end
+  end
+end
+
 function ChatLootBidder:DecodeAndSave(text, parent)
   local encoding = SrEditFrameHeaderString:GetText()
   local t
@@ -1199,6 +1211,7 @@ function ChatLootBidder:DecodeAndSave(text, parent)
     Error("No encoding provided")
     return
   end
+  ValidateAndWarn(t)
   ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName] = t
   parent:Hide()
 end

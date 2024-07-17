@@ -1,64 +1,118 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
   <GameTooltip name="LootFrameTooltip" inherits="GameTooltipTemplate" parent="UIParent" hidden="false"/>
 
   <Frame name="ChatLootBidderFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
-    <Size><AbsDimension x="240" y="240"/></Size>
-    <Anchors><Anchor point="TOP"><Offset><AbsDimension x="0" y="-100"/></Offset></Anchor></Anchors>
+    <Size>
+      <AbsDimension x="240" y="240"/>
+    </Size>
+    <Anchors>
+      <Anchor point="TOP">
+        <Offset>
+          <AbsDimension x="0" y="-100"/>
+        </Offset>
+      </Anchor>
+    </Anchors>
     <Layers>
-			<Layer level="ARTWORK">
-				<Texture name="$parentHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
-					<Size>
-						<AbsDimension x="240" y="64"/>
-					</Size>
-					<Anchors>
-						<Anchor point="TOP">
-							<Offset>
-								<AbsDimension x="0" y="5"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</Texture>
-				<FontString inherits="GameFontNormal" text="Mode" name="$parentHeaderString">
-					<Anchors>
-						<Anchor point="TOP" relativeTo="$parentHeader">
-							<Offset>
-								<AbsDimension x="0" y="-14"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</FontString>
-			</Layer>
+      <Layer level="ARTWORK">
+        <Texture name="$parentHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
+          <Size>
+            <AbsDimension x="240" y="64"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOP">
+              <Offset>
+                <AbsDimension x="0" y="5"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </Texture>
+        <FontString inherits="GameFontNormal" text="Mode" name="$parentHeaderString">
+          <Anchors>
+            <Anchor point="TOP" relativeTo="$parentHeader">
+              <Offset>
+                <AbsDimension x="0" y="-14"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
       <Layer level="OVERLAY">
         <FontString name="$parentItem1" inherits="GameFontNormal" text="1" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-90"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-90"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem2" inherits="GameFontNormal" text="2" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-110"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-110"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem3" inherits="GameFontNormal" text="3" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-130"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-130"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem4" inherits="GameFontNormal" text="4" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-150"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-150"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem5" inherits="GameFontNormal" text="5" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-170"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-170"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem6" inherits="GameFontNormal" text="6" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-190"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-190"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem7" inherits="GameFontNormal" text="7" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-210"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-210"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
         <FontString name="$parentItem8" inherits="GameFontNormal" text="8" hidden="true">
-          <Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="12" y="-230"/></Offset></Anchor></Anchors>
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              <Offset>
+                <AbsDimension x="12" y="-230"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
         </FontString>
       </Layer>
     </Layers>
-    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
-              edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+    <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
       <BackgroundInsets>
         <AbsInset left="11" right="12" top="12" bottom="11"/>
       </BackgroundInsets>
@@ -71,8 +125,16 @@
     </Backdrop>
     <Frames>
       <Button name="$parentUnstageButton1" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-82"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-82"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem1"):GetText(), true)
@@ -80,8 +142,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton2" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-102"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-102"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem2"):GetText(), true)
@@ -89,8 +159,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton3" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-122"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-122"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem3"):GetText(), true)
@@ -98,8 +176,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton4" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-142"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-142"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem4"):GetText(), true)
@@ -107,8 +193,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton5" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-162"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-162"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem5"):GetText(), true)
@@ -116,8 +210,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton6" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-182"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-182"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem6"):GetText(), true)
@@ -125,8 +227,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton7" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-202"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-202"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem7"):GetText(), true)
@@ -134,8 +244,16 @@
         </Scripts>
       </Button>
       <Button name="$parentUnstageButton8" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-6" y="-222"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-6" y="-222"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Unstage(getglobal("ChatLootBidderFrameItem8"):GetText(), true)
@@ -143,8 +261,16 @@
         </Scripts>
       </Button>
       <Button name="$parentStartSession" inherits="GameMenuButtonTemplate" text="Start Loot Session" hidden="true">
-        <Size><AbsDimension x="150" y="28"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="-30"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="150" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="10" y="-30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Start()
@@ -152,8 +278,16 @@
         </Scripts>
       </Button>
       <Button name="$parentEndSession" inherits="GameMenuButtonTemplate" text="End Loot Session" hidden="true">
-        <Size><AbsDimension x="150" y="28"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="-30"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="150" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="10" y="-30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():End()
@@ -161,8 +295,16 @@
         </Scripts>
       </Button>
       <Button name="$parentClearSession" inherits="GameMenuButtonTemplate" text="Clear Loot Stage" hidden="true">
-        <Size><AbsDimension x="150" y="28"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="-58"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="150" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="10" y="-58"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Clear(true)
@@ -170,8 +312,16 @@
         </Scripts>
       </Button>
       <Button name="$parentCloseButton" inherits="UIPanelCloseButton" text="">
-        <Size><AbsDimension x="28" y="28"/></Size>
-        <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+        <Size>
+          <AbsDimension x="28" y="28"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="0" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
         <Scripts>
           <OnClick>
             this:GetParent():Hide()
@@ -180,36 +330,36 @@
       </Button>
     </Frames>
     <Scripts>
-    <OnEvent>
-      this[event](arg1,arg2,arg3,arg4)
-    </OnEvent>
-    <OnLoad>
-      this:RegisterEvent("ADDON_LOADED")
-      this:RegisterEvent("CHAT_MSG_ADDON")
-      this:RegisterEvent("PLAYER_ENTERING_WORLD")
-      this:RegisterEvent("PLAYER_LEAVING_WORLD")
-      this:RegisterEvent("CHAT_MSG_SYSTEM")
-      this:RegisterEvent("LOOT_OPENED")
-      this:RegisterForDrag("LeftButton")
-    </OnLoad>
-    <OnHide>
-      this:StopMovingOrSizing()
-    </OnHide>
-    <OnDragStart>
-      if arg1 == "LeftButton" then
-        this:SetMovable(true)
-        this:StartMoving()
-      end
-    </OnDragStart>
-    <OnDragStop>
-      this:StopMovingOrSizing()
-    </OnDragStop>
-    <OnMouseUp>
-      if arg1 == "LeftButton" and this:IsVisible() then
+      <OnEvent>
+        this[event](arg1,arg2,arg3,arg4)
+      </OnEvent>
+      <OnLoad>
+        this:RegisterEvent("ADDON_LOADED")
+        this:RegisterEvent("CHAT_MSG_ADDON")
+        this:RegisterEvent("PLAYER_ENTERING_WORLD")
+        this:RegisterEvent("PLAYER_LEAVING_WORLD")
+        this:RegisterEvent("CHAT_MSG_SYSTEM")
+        this:RegisterEvent("LOOT_OPENED")
+        this:RegisterForDrag("LeftButton")
+      </OnLoad>
+      <OnHide>
         this:StopMovingOrSizing()
-        this:SetMovable(false)
-      end
-    </OnMouseUp>
+      </OnHide>
+      <OnDragStart>
+        if arg1 == "LeftButton" then
+          this:SetMovable(true)
+          this:StartMoving()
+        end
+      </OnDragStart>
+      <OnDragStop>
+        this:StopMovingOrSizing()
+      </OnDragStop>
+      <OnMouseUp>
+        if arg1 == "LeftButton" and this:IsVisible() then
+          this:StopMovingOrSizing()
+          this:SetMovable(false)
+        end
+      </OnMouseUp>
     </Scripts>
   </Frame>
 </Ui>
