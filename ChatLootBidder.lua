@@ -1096,9 +1096,9 @@ function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
     if string.len(existingWhy) > 0 then
       SendResponse("Ignoring your roll of " .. roll .. ". " .. existingWhy, name)
     elseif sessionMode == "DKP" then
-      SendResponse("Ignoring your roll of " .. roll .. ". You must first declare that you are rolling on an item first: '[item-link] roll'", name)
+      SendResponse("Ignoring your roll of " .. roll .. ". You must first declare that you are rolling on an item first: '/w " .. me .. " [item-link] roll'", name)
     else
-      SendResponse("Ignoring your roll of " .. roll .. ". You must bid on an item before rolling on it: '[item-link] ms/os/roll'", name)
+      SendResponse("Ignoring your roll of " .. roll .. ". You must bid on an item before rolling on it: '/w " .. me .. " [item-link] ms/os/roll'", name)
     end
 	end
 end
