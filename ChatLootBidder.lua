@@ -546,8 +546,10 @@ function ChatLootBidder:Start(items, timer, mode)
     local itemName = ParseItemNameFromItemLink(i)
     local srsOnItem = GetKeysWhere(srs, function(player, playerSrs) return IsInRaid(player) and TableContains(playerSrs, itemName) end)
     local srLen = TableLength(srsOnItem)
+    local exampleItem = "[item-link]"
     session[i] = {}
     if srLen == 0 then
+      exampleItem = i
       table.insert(startChannelMessage, i)
       bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
       session[i]["ms"] = {}
@@ -570,7 +572,7 @@ function ChatLootBidder:Start(items, timer, mode)
     end
   end
   table.insert(startChannelMessage, "-----------")
-  table.insert(startChannelMessage, "/w " .. PlayerWithClassColor(me) .. " " .. items[1] .. " ms/os/roll" .. (mode == "DKP" and " #bid" or "") .. " [optional-note]")
+  table.insert(startChannelMessage, "/w " .. PlayerWithClassColor(me) .. " " .. exampleItem .. " ms/os/roll" .. (mode == "DKP" and " #bid" or "") .. " [optional-note]")
   if TableLength(startChannelMessage) > 4 then
     local l
     for _, l in pairs(startChannelMessage) do
