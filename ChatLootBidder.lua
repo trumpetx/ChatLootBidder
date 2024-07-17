@@ -1009,7 +1009,7 @@ function ChatFrame_OnEvent(event)
       roll[bidder] = -1
       received = "Your roll bid for " .. item .. " has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
     end
-    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. received)
+    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. amt)))
     SendResponse(received, bidder)
     return
   else
