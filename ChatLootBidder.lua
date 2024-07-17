@@ -1081,6 +1081,7 @@ function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
   local _, _, name, roll, low, high = string.find(msg, rollRegex)
 	if name then
     if tonumber(low) > 1 or tonumber(high) > 100 then return end -- invalid roll
+    if name == me and tonumber(high) <= 40 then return end -- master looter using pfUI's random loot distribution
     local existingWhy = ""
     for item,itemSession in pairs(session) do
       local existingRoll = itemSession["roll"][name]
