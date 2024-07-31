@@ -25,7 +25,7 @@
             </Anchor>
           </Anchors>
         </Texture>
-        <FontString inherits="GameFontNormal" text="Mode" name="$parentHeaderString">
+        <FontString inherits="GameFontNormal" text="Options (TODO)" name="$parentHeaderString">
           <Anchors>
             <Anchor point="TOP" relativeTo="$parentHeader">
               <Offset>
@@ -72,34 +72,45 @@
           </OnLoad>
         </Scripts>
         <ScrollChild>
-          <EditBox name="SrEditFrameText" multiLine="true" nonspacewrap="true" spacing="1" autoFocus="false">
-            <Size>
-              <AbsDimension x="375" y="335"/>
-            </Size>
-            <Scripts>
-              <OnLoad>
-                    this.GetCursorPosition = function(this)
-                        return 0
-                    end
-                    this.cursorOffset = 0
-                    this.cursorHeight = 0
-              </OnLoad>
-              <OnEscapePressed>
-                    this:ClearFocus();
-              </OnEscapePressed>
-              <OnTextChanged>
-                    this:GetParent():UpdateScrollChildRect()
-              </OnTextChanged>
-              <OnCursorChanged>
-                    this.cursorOffset = arg2
-                    this.cursorHeight = arg4
-              </OnCursorChanged>
-              <OnUpdate>
-                    ScrollingEdit_OnUpdate()
-              </OnUpdate>
-            </Scripts>
-            <FontString inherits="GameFontNormal"/>
-          </EditBox>
+          <Frame name="$parentScrollChild">
+            <CheckButton parent="$parent" name="clbo_Mode" inherits="OptionsCheckButtonTemplate">
+              <Anchors>
+                <Anchor point="LEFT">
+                  <Offset>
+                    <AbsDimension x="20" y="0"></AbsDimension>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+              <Scripts>
+                <OnClick>
+                  print(this:GetName() .. (this:GetChecked() and " checked" or " unchecked"))
+                </OnClick>
+              </Scripts>
+            </CheckButton>
+            <CheckButton name="clbo_AutoStage" inherits="OptionsCheckButtonTemplate">
+              <Anchors>
+                <Anchor point="LEFT">
+                  <Offset>
+                    <AbsDimension x="20" y="30"></AbsDimension>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+              <Scripts>
+                <OnClick>
+                  print(this:GetName() .. (this:GetChecked() and " checked" or " unchecked"))
+                </OnClick>
+              </Scripts>
+            </CheckButton>
+            <EditBox name="clbo_MaxBid">
+              <Size x="100" y="32" />
+              <Anchors>
+                <Anchor point="LEFT">
+                  <Offset x="50" y="0" />
+                </Anchor>
+              </Anchors>
+              <FontString inherits="GameFontNormal"/>
+            </EditBox>
+          </Frame>
         </ScrollChild>
       </ScrollFrame>
       <Button name="$parentCloseButton" inherits="UIPanelCloseButton" text="">
@@ -116,23 +127,6 @@
         <Scripts>
           <OnClick>
                 this:GetParent():Hide()
-          </OnClick>
-        </Scripts>
-      </Button>
-      <Button name="$parentSaveButton" inherits="GameMenuButtonTemplate" text="Save">
-        <Size>
-          <AbsDimension x="100" y="30"/>
-        </Size>
-        <Anchors>
-          <Anchor point="BOTTOMRIGHT" relativeTo="$parent">
-            <Offset>
-              <AbsDimension x="-10" y="12"/>
-            </Offset>
-          </Anchor>
-        </Anchors>
-        <Scripts>
-          <OnClick>
-            ChatLootBidderFrame:DecodeAndSave(SrEditFrameText:GetText(), this:GetParent())
           </OnClick>
         </Scripts>
       </Button>

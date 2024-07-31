@@ -4,6 +4,7 @@
 ## Notes: https://github.com/trumpetx/ChatLootBidder
 ## Author: |c013220ffTrumpetX|r
 ## SavedVariables: ChatLootBidder_Store
+## OptionalDeps: AtlasLoot
 
 ChatThrottleLib.lua
 VersionUtil.lua
@@ -11,6 +12,7 @@ VersionUtil.lua
 csv.lua
 json.lua
 
+Options.xml
 SrEdit.xml
 ChatLootBidder.xml
 

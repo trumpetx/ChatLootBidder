@@ -40,6 +40,7 @@ local function DefaultTrue(prop) return prop == nil or DefaultFalse(prop) end
 
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
+  ChatLootBidder_Store.DisableItemValidation = DefaultFalse(ChatLootBidder_Store.DisableItemValidation)
   ChatLootBidder_Store.RollAnnounce = DefaultTrue(ChatLootBidder_Store.RollAnnounce)
   ChatLootBidder_Store.AutoStage = DefaultTrue(ChatLootBidder_Store.AutoStage)
   ChatLootBidder_Store.BidAnnounce = DefaultFalse(ChatLootBidder_Store.BidAnnounce)
@@ -542,11 +543,11 @@ function ChatLootBidder:Start(items, timer, mode)
   table.insert(startChannelMessage, "Bid on the following items")
   table.insert(startChannelMessage, "-----------")
   local bidAddonMessage = "mode=" .. mode .. ",items="
+  local exampleItem
   for k,i in pairs(items) do
     local itemName = ParseItemNameFromItemLink(i)
     local srsOnItem = GetKeysWhere(srs, function(player, playerSrs) return IsInRaid(player) and TableContains(playerSrs, itemName) end)
     local srLen = TableLength(srsOnItem)
-    local exampleItem = "[item-link]"
     session[i] = {}
     if srLen == 0 then
       exampleItem = i
@@ -558,6 +559,7 @@ function ChatLootBidder:Start(items, timer, mode)
       session[i]["cancel"] = {}
       session[i]["notes"] = {}
     else
+      table.insert(startChannelMessage, i .. " SR (" .. srLen .. ")")
       session[i]["sr"] = {}
       session[i]["roll"] = {}
       for _,sr in pairs(srsOnItem) do
@@ -572,8 +574,8 @@ function ChatLootBidder:Start(items, timer, mode)
     end
   end
   table.insert(startChannelMessage, "-----------")
-  table.insert(startChannelMessage, "/w " .. PlayerWithClassColor(me) .. " " .. exampleItem .. " ms/os/roll" .. (mode == "DKP" and " #bid" or "") .. " [optional-note]")
-  if TableLength(startChannelMessage) > 4 then
+  if exampleItem then
+    table.insert(startChannelMessage, "/w " .. PlayerWithClassColor(me) .. " " .. exampleItem .. " ms/os/roll" .. (mode == "DKP" and " #bid" or "") .. " [optional-note]")
     local l
     for _, l in pairs(startChannelMessage) do
       MessageStartChannel(l)
@@ -695,10 +697,10 @@ local InitSlashCommands = function()
 	SlashCmdList["ChatLootBidder"] = function(message)
 		local commandlist = SplitBySpace(message)
     if commandlist[1] == nil then
-      if session == nil then
-        ChatLootBidder:StartSessionButtonShown()
+      if ChatLootBidderOptionsFrame:IsVisible() then
+        ChatLootBidderOptionsFrame:Hide()
       else
-        ChatLootBidder:EndSessionButtonShown()
+        ChatLootBidderOptionsFrame:Show()
       end
     elseif commandlist[1] == "help" then
 			ShowHelp()
@@ -873,11 +875,16 @@ local function HandleSrAdd(bidder, itemName)
     Srs(softReserveSessionName)[bidder] = {}
   end
   local sr = Srs(softReserveSessionName)[bidder]
-  table.insert(sr, itemName)
-  if TableLength(sr) > ChatLootBidder_Store.DefaultMaxSoftReserves then
-    local pop = table.remove(sr, 1)
-    if not TableContains(sr, pop) then
-      SendResponse("You are no longer reserving: " .. pop, bidder)
+  local itemNumber, _, _quality, raidBoss, dropRate = ValidateItemName(itemName)
+  if itemNumber == nil then
+    SendResponse(itemName .. " does not appear to be a valid item name (AtlasLoot).  If this is incorrect, the Loot Master will need to manually input the item name or disable item validation.", bidder)
+  else
+    table.insert(sr, itemName)
+    if TableLength(sr) > ChatLootBidder_Store.DefaultMaxSoftReserves then
+      local pop = table.remove(sr, 1)
+      if not TableContains(sr, pop) then
+        SendResponse("You are no longer reserving: " .. pop, bidder)
+      end
     end
   end
 end
@@ -1186,12 +1193,36 @@ local function ParseSemicolon(text)
   return t
 end
 
+-- Ex/
+-- AtlasLoot_Data["AtlasLootItems"]["BWLRazorgore"][1]
+-- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
+function ValidateItemName(n)
+  if ChatLootBidder_Store.DisableItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return [-1 n, -1, "", ""] end
+  for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
+    for _,dataSet in raidBoss do
+      if dataSet then
+        local itemNumber, icon, nameQuery, _, dropRate = unpack(dataSet)
+        local _start, _end, _quality, _name = string.find(nameQuery, '^=q(%d)=(.-)$')
+        if _name == n then
+          return unpack({itemNumber, _name, _quality, raidBossKey, dropRate})
+        end
+      end
+    end
+  end
+  return nil
+end
+
 function ValidateAndWarn(t)
-  local k,v,len
+  local k,v,i,len
   for k,v in pairs(t) do
     len = getn(v)
     if len > ChatLootBidder_Store.DefaultMaxSoftReserves then
       Error(k .. " has " .. len .. " soft reserves loaded (max=" .. ChatLootBidder_Store.DefaultMaxSoftReserves .. ")")
+    end
+    for _,i in pairs(v) do
+      if not ValidateItemName(i) then
+        Error(i .. " does not appear to be a valid item name (AtlasLoot)")
+      end
     end
   end
 end

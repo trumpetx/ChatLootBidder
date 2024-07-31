@@ -87,6 +87,8 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.6.3
+  * Added Soft Reserve name validation (Requires AtlasLoot)
 * 1.6.1-2
   * Soft Reserve Bug Fixess
 * 1.6.0
