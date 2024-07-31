@@ -1197,7 +1197,7 @@ end
 -- AtlasLoot_Data["AtlasLootItems"]["BWLRazorgore"][1]
 -- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
 function ValidateItemName(n)
-  if ChatLootBidder_Store.DisableItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return [-1 n, -1, "", ""] end
+  if ChatLootBidder_Store.DisableItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return unpack({-1 n, -1, "", ""}) end
   for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
     for _,dataSet in raidBoss do
       if dataSet then
