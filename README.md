@@ -20,6 +20,8 @@ __Items that are not goals:__
 ## Addon Setup
 Most configuration should be set to a reasonable default
 * `/loot` Show the GUI options menu
+![image](https://github.com/user-attachments/assets/c3f936ff-3740-4341-827a-9b87e00daf90)
+
 * Custom Channels (unable to set in GUI)
   * `/loot bid CustomChannel` Set the "Bid Channel" to the custom channel "CustomChannel"
   * `/loot session CustomChannel` Sets the "Session Announce Channel" to the custom channel "CustomChannel"
