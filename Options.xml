@@ -1,8 +1,27 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Script file="Options.lua"/>
+  <CheckButton name="MyOptionsCheckButtonTemplate" inherits="OptionsCheckButtonTemplate" virtual="true">
+    <Scripts>
+      <OnClick>
+        ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetChecked() == 1, this:GetParent():GetName())
+      </OnClick>
+    </Scripts>
+  </CheckButton>
+  <Slider name="MyRaritySlider" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="0" maxValue="5" inherits="OptionsSliderTemplate" virtual="true">
+    <Scripts>
+      <OnLoad>
+        getglobal(this:GetName() .. 'Low'):SetText("Common")
+        getglobal(this:GetName() .. 'High'):SetText("Legendary")
+      </OnLoad>
+      <OnValueChanged>
+        ChatLootBidderFrame:SetPropValue(this:GetName(), math.floor(this:GetValue()), this:GetParent():GetName())
+      </OnValueChanged>
+    </Scripts>
+  </Slider>
   <Frame name="ChatLootBidderOptionsFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
     <Size>
-      <AbsDimension x="420" y="400"/>
+      <AbsDimension x="420" y="470"/>
     </Size>
     <Anchors>
       <Anchor point="TOP">
@@ -14,18 +33,15 @@
     <Layers>
       <Layer level="ARTWORK">
         <Texture name="$parentHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
-          <Size>
-            <AbsDimension x="240" y="64"/>
-          </Size>
           <Anchors>
             <Anchor point="TOP">
               <Offset>
-                <AbsDimension x="0" y="8"/>
+                <AbsDimension x="0" y="15"/>
               </Offset>
             </Anchor>
           </Anchors>
         </Texture>
-        <FontString inherits="GameFontNormal" text="Options (TODO)" name="$parentHeaderString">
+        <FontString inherits="GameFontNormal" text="Chat Loot Bidder Settings" name="$parentHeaderString">
           <Anchors>
             <Anchor point="TOP" relativeTo="$parentHeader">
               <Offset>
@@ -48,71 +64,326 @@
       </EdgeSize>
     </Backdrop>
     <Frames>
-      <ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameTemplate">
-        <Size>
-          <AbsDimension x="372" y="335"/>
-        </Size>
+      <Frame>
+        <Layers>
+          <Layer level="OVERLAY">
+            <!-- Global -->
+            <FontString name="$parentAllText" inherits="GameFontNormal" text="Global Settings">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="20" y="-25"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentBidSummaryText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="50" y="-95"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentBidAnnounceText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="50" y="-125"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentRollAnnounceText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="50" y="-185"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentAutoStageText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="50" y="-205"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+
+            <!-- SR Mode -->
+            <FontString name="$parentSrModeText" inherits="GameFontNormal" text="Soft-Reserve Settings">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="200" y="-25"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentItemValidationText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="230" y="-55"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentAutoRemoveSrAfterWinText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="230" y="-85"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentAutoLockSoftReserveText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="230" y="-115"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+
+            <!-- DKP Mode -->
+            <FontString name="$parentDkpModeText" inherits="GameFontNormal" text="DKP Settings">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="200" y="-205"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentBreakTiesText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="230" y="-235"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
+      <Slider name="$parentDefaultSessionMode" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="0" maxValue="1" inherits="OptionsSliderTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
-              <AbsDimension x="15" y="-25"/>
+              <AbsDimension x="20" y="-55"/>
             </Offset>
           </Anchor>
         </Anchors>
         <Scripts>
-          <OnVerticalScroll>
-						ChatLootBidderOptionsFrameScrollFrame:SetVerticalScroll(arg1)
-						ChatLootBidderFrame:OnVerticalScroll(this);
-          </OnVerticalScroll>
-          <OnShow>
-						ChatLootBidderFrame:OnVerticalScroll(this);
-          </OnShow>
           <OnLoad>
-						this.scrollBarHideable = 1
+            getglobal(this:GetName() .. 'Low'):SetText("DKP")
+            getglobal(this:GetName() .. 'High'):SetText("MS/OS")
+            getglobal(this:GetName() .. 'Text'):SetText("Mode")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue() == 1 and "MSOS" or "DKP", this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
+      <CheckButton name="$parentBidSummary" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-85" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <CheckButton name="$parentBidAnnounce" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-115" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <Frame name="$parentBidChannel" inherits="UIDropDownMenuTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="0" y="-145"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            UIDropDownMenu_Initialize(this, ChatLootBidderOptionsFrame_InitializeChannelDropdown);
           </OnLoad>
         </Scripts>
-        <ScrollChild>
-          <Frame name="$parentScrollChild">
-            <CheckButton parent="$parent" name="clbo_Mode" inherits="OptionsCheckButtonTemplate">
-              <Anchors>
-                <Anchor point="LEFT">
-                  <Offset>
-                    <AbsDimension x="20" y="0"></AbsDimension>
-                  </Offset>
-                </Anchor>
-              </Anchors>
-              <Scripts>
-                <OnClick>
-                  print(this:GetName() .. (this:GetChecked() and " checked" or " unchecked"))
-                </OnClick>
-              </Scripts>
-            </CheckButton>
-            <CheckButton name="clbo_AutoStage" inherits="OptionsCheckButtonTemplate">
-              <Anchors>
-                <Anchor point="LEFT">
-                  <Offset>
-                    <AbsDimension x="20" y="30"></AbsDimension>
-                  </Offset>
-                </Anchor>
-              </Anchors>
-              <Scripts>
-                <OnClick>
-                  print(this:GetName() .. (this:GetChecked() and " checked" or " unchecked"))
-                </OnClick>
-              </Scripts>
-            </CheckButton>
-            <EditBox name="clbo_MaxBid">
-              <Size x="100" y="32" />
-              <Anchors>
-                <Anchor point="LEFT">
-                  <Offset x="50" y="0" />
-                </Anchor>
-              </Anchors>
-              <FontString inherits="GameFontNormal"/>
-            </EditBox>
-          </Frame>
-        </ScrollChild>
-      </ScrollFrame>
+      </Frame>
+      <CheckButton name="$parentRollAnnounce" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-175" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <CheckButton name="$parentAutoStage" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-205" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <Slider name="$parentMinRarity" inherits="MyRaritySlider">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-255" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Slider>
+      <Slider name="$parentMaxRarity" inherits="MyRaritySlider">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-305" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Slider>
+      <Slider name="$parentTimerSeconds" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="0" maxValue="120" inherits="OptionsSliderTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-355"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            getglobal(this:GetName() .. 'Low'):SetText("1")
+            getglobal(this:GetName() .. 'High'):SetText("120")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
+      <Frame name="$parentSessionAnnounceChannel" inherits="UIDropDownMenuTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="0" y="-385"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            UIDropDownMenu_Initialize(this, ChatLootBidderOptionsFrame_InitializeChannelDropdown);
+          </OnLoad>
+        </Scripts>
+      </Frame>
+      <Frame name="$parentWinnerAnnounceChannel" inherits="UIDropDownMenuTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="0" y="-415"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            UIDropDownMenu_Initialize(this, ChatLootBidderOptionsFrame_InitializeChannelDropdown);
+          </OnLoad>
+        </Scripts>
+      </Frame>
+
+      <!-- SR Mode -->
+      <CheckButton name="$parentItemValidation" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-45"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <CheckButton name="$parentAutoRemoveSrAfterWin" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-75" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <CheckButton name="$parentAutoLockSoftReserve" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-105" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+
+      <!-- DKP Mode -->
+      <CheckButton name="$parentBreakTies" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-225" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
+      <Slider name="$parentMinBid" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="0" maxValue="1" inherits="OptionsSliderTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-275"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            getglobal(this:GetName() .. 'Low'):SetText("0")
+            getglobal(this:GetName() .. 'High'):SetText("1")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
+      <Slider name="$parentMaxBid" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="1" maxValue="10000" inherits="OptionsSliderTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-325"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            getglobal(this:GetName() .. 'Low'):SetText("1")
+            getglobal(this:GetName() .. 'High'):SetText("10000")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
+
       <Button name="$parentCloseButton" inherits="UIPanelCloseButton" text="">
         <Size>
           <AbsDimension x="28" y="28"/>
@@ -126,7 +397,7 @@
         </Anchors>
         <Scripts>
           <OnClick>
-                this:GetParent():Hide()
+            this:GetParent():Hide()
           </OnClick>
         </Scripts>
       </Button>
@@ -134,6 +405,7 @@
     <Scripts>
       <OnLoad>
         this:RegisterForDrag("LeftButton")
+        tinsert(UISpecialFrames, this:GetName())
       </OnLoad>
       <OnHide>
         this:StopMovingOrSizing()

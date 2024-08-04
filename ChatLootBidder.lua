@@ -1,5 +1,6 @@
 local ChatLootBidder = ChatLootBidderFrame
-if ChatLootBidder == nil then print("XML Error"); return end
+--if ChatLootBidder == nil then print("XML Error"); return end
+local T = ChatLootBidder_i18n
 local startSessionButton = getglobal(ChatLootBidder:GetName() .. "StartSession")
 local endSessionButton = getglobal(ChatLootBidder:GetName() .. "EndSession")
 local clearSessionButton = getglobal(ChatLootBidder:GetName() .. "ClearSession")
@@ -40,7 +41,7 @@ local function DefaultTrue(prop) return prop == nil or DefaultFalse(prop) end
 
 local function LoadVariables()
   ChatLootBidder_Store = ChatLootBidder_Store or {}
-  ChatLootBidder_Store.DisableItemValidation = DefaultFalse(ChatLootBidder_Store.DisableItemValidation)
+  ChatLootBidder_Store.ItemValidation = DefaultTrue(ChatLootBidder_Store.ItemValidation)
   ChatLootBidder_Store.RollAnnounce = DefaultTrue(ChatLootBidder_Store.RollAnnounce)
   ChatLootBidder_Store.AutoStage = DefaultTrue(ChatLootBidder_Store.AutoStage)
   ChatLootBidder_Store.BidAnnounce = DefaultFalse(ChatLootBidder_Store.BidAnnounce)
@@ -92,56 +93,36 @@ local function Trace(message)
 	end
 end
 
+function ChatLootBidder:SetPropValue(propName, propValue, prefix)
+  if prefix then
+    propName = string.sub(propName, strlen(prefix)+1)
+  end
+  if ChatLootBidder_Store[propName] ~= nil then
+    ChatLootBidder_Store[propName] = propValue
+    local v = propValue
+    if type(v) == "boolean" then
+      v = v and "on" or "off"
+    end
+    Debug((T[propName] or propName) .. " is " .. tostring(v))
+
+    -- Special Handlers for specific properties here
+    if propName == "DefaultSessionMode" then
+      ChatLootBidder:RedrawStage()
+    end
+
+  else
+    Error(propName .. " is not initialized")
+  end
+end
+
 local ShowHelp = function()
-	Message("/loot - Show the stage or end session window")
-	Message("/loot info - Show current settings")
+	Message("/loot - Open GUI Options")
   Message("/loot stage [itm1] [itm2] - Stage item(s) for a future session start")
 	Message("/loot start [itm1] [itm2] [#timer_optional] - Start a session for item(s) + staged items(s)")
   Message("/loot end - End a loot session and announce winner(s)")
-  Message("/loot dkp - Switch to DKP Session Mode")
-  Message("/loot msos - Switch to MS/OS Session Mode")
   Message("/loot sr load [name]  - Load a SR list (by name, optional)")
-  Message("Visit https://github.com/trumpetx/ChatLootBidder for a full listing of commands and instructions")
-end
-
-local function TrueOnOff(val)
-  return val and "On" or "Off"
-end
-
-local ShowInfo = function()
-  Message("Bid announcing is " .. TrueOnOff(ChatLootBidder_Store.BidAnnounce))
-  Message("Roll announcing is " .. TrueOnOff(ChatLootBidder_Store.RollAnnounce))
-  Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
-  Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
-  Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
-  Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
-  Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. " seconds")
-  Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
-  Message("Auto-stage is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
-  Message("Auto-stage loot level is set to min=" .. ChatLootBidder_Store.MinRarity .. ", max=" .. ChatLootBidder_Store.MaxRarity .. " (0=gray - 5=legendary)")
-  Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
-  Message("Break Ties mode (DKP only) is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
-	if ChatLootBidder_Store.DebugLevel > 0 then Message("Debug Level set to " .. ChatLootBidder_Store.DebugLevel) end
-	Message(addonNotes .. " for bugs and suggestions")
+	Message(addonNotes .. " for detailed instructions, bugs, and suggestions")
 	Message("Written by " .. addonAuthor)
-  if ChatLootBidder_Store.DebugLevel > 1 then
-    Trace("Session: " .. (session == nil and "None" or ""))
-    for k,v in pairs(session or {}) do
-      Trace("  " .. k)
-      Trace("  MS")
-      for k2,v2 in pairs(session[k]["ms"]) do
-        Trace("    " .. k2 .. " - " .. v2)
-      end
-      Trace("  OS")
-      for k2,v2 in pairs(session[k]["os"]) do
-        Trace("    " .. k2 .. " - " .. v2)
-      end
-      Trace("  ROLL")
-      for k2,v2 in pairs(session[k]["roll"]) do
-        Trace("    " .. k2 .. " - " .. v2)
-      end
-    end
-  end
 end
 
 local function GetRaidIndex(unitName)
@@ -176,7 +157,7 @@ end
 
 local function IsStaticChannel(channel)
   channel = channel == nil and nil or string.upper(channel)
-  return channel == "RAID" or channel == "RAID_WARNING" or channel == "SAY" or channel == "EMOTE" or channel == "PARTY" or channel == "GUILD" or channel == "OFFICER"
+  return channel == "RAID" or channel == "RAID_WARNING" or channel == "SAY" or channel == "EMOTE" or channel == "PARTY" or channel == "GUILD" or channel == "OFFICER" or channel == "YELL"
 end
 
 local function IsTableEmpty(tbl)
@@ -692,6 +673,13 @@ local function PrettyPrintJson(encoded)
   return encoded
 end
 
+local function HandleChannel(prop, channel)
+  if IsStaticChannel(channel) then channel = string.upper(channel) end
+  ChatLootBidder_Store[prop] = channel
+  Message(T[prop] .. " announce channel set to " .. channel)
+  getglobal("ChatLootBidderOptionsFrame" .. prop):SetValue(channel)
+end
+
 local InitSlashCommands = function()
 	SLASH_ChatLootBidder1, SLASH_ChatLootBidder2 = "/l", "/loot"
 	SlashCmdList["ChatLootBidder"] = function(message)
@@ -702,31 +690,11 @@ local InitSlashCommands = function()
       else
         ChatLootBidderOptionsFrame:Show()
       end
-    elseif commandlist[1] == "help" then
+    elseif commandlist[1] == "help" or commandlist[1] == "info" then
 			ShowHelp()
-    elseif commandlist[1] == "autostage" then
-      ChatLootBidder_Store.AutoStage = not ChatLootBidder_Store.AutoStage
-      Message("Auto-Stage mode is " .. TrueOnOff(ChatLootBidder_Store.AutoStage))
-    elseif commandlist[1] == "autostageloot" then
-      local min = ToWholeNumber(commandlist[2], -1)
-      local max = ToWholeNumber(commandlist[3], -1)
-      if min > 5 or min < 0 or max > 5 or max < 0 then
-        Error("Provide a loot-level range (inclusive): /loot autostageloot 4 4")
-      else
-        ChatLootBidder_Store.MinRarity = min
-        ChatLootBidder_Store.MaxRarity = max
-      end
-      Message("Auto-stage loot level is set to min=" .. ChatLootBidder_Store.MinRarity .. ", max=" .. ChatLootBidder_Store.MaxRarity .. " (0=gray - 5=legendary)")
-    elseif commandlist[1] == "breakties" then
-      ChatLootBidder_Store.BreakTies = not ChatLootBidder_Store.BreakTies
-      Message("Break Ties mode is " .. TrueOnOff(ChatLootBidder_Store.BreakTies))
-    elseif commandlist[1] == "msos" or commandlist[1] == "dkp" then
-      ChatLootBidder_Store.DefaultSessionMode = string.upper(commandlist[1])
-      Message("Session Mode set to " .. ChatLootBidder_Store.DefaultSessionMode)
-      ChatLootBidder:RedrawStage()
     elseif commandlist[1] == "sr" then
       if ChatLootBidder_Store.DefaultSessionMode ~= "MSOS" then
-        Error("You need to be in MSOS mode to modify Soft Reserve sessions.  `/loot msos` to change modes.")
+        Error("You need to be in MSOS mode to modify Soft Reserve sessions.  `/loot` to change modes.")
         return
       end
       local subcommand = commandlist[2]
@@ -781,42 +749,12 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "debug" then
       ChatLootBidder_Store.DebugLevel = ToWholeNumber(commandlist[2])
       Message("Debug level set to " .. ChatLootBidder_Store.DebugLevel)
-    elseif commandlist[1] == "timer" then
-      ChatLootBidder_Store.TimerSeconds = ToWholeNumber(commandlist[2])
-      Message("BigWigs default loot timer set to " .. ChatLootBidder_Store.TimerSeconds .. "  seconds")
-    elseif commandlist[1] == "timer" then
-      ChatLootBidder_Store.MaxBid = math.max(ToWholeNumber(commandlist[2]), 1)
-      Message("Maximum bid set to " .. ChatLootBidder_Store.MaxBid)
-    elseif commandlist[1] == "bid" then
-      if commandlist[2] == nil then
-        ChatLootBidder_Store.BidAnnounce = not ChatLootBidder_Store.BidAnnounce
-        Message("Bid announcing is " .. TrueOnOff(ChatLootBidder_Store.BidAnnounce))
-      else
-        ChatLootBidder_Store.BidChannel = commandlist[2]
-        Message("Bid announce channel set to " .. ChatLootBidder_Store.BidChannel)
-      end
-    elseif commandlist[1] == "roll" then
-      ChatLootBidder_Store.RollAnnounce = not ChatLootBidder_Store.RollAnnounce
-      Message("Roll announcing is " .. TrueOnOff(ChatLootBidder_Store.RollAnnounce))
-    elseif commandlist[1] == "endsummary" then
-      ChatLootBidder_Store.BidSummary = not ChatLootBidder_Store.BidSummary
-      Message("Bid summary at end is " .. TrueOnOff(ChatLootBidder_Store.BidSummary))
-    elseif commandlist[1] == "session" then
-      if commandlist[2] == nil then
-        Error("A channel name (like SAY, RAID, RAID_WARNING, etc) must be provided")
-      else
-        ChatLootBidder_Store.SessionAnnounceChannel = commandlist[2]
-        Message("Session announce channel set to " .. ChatLootBidder_Store.SessionAnnounceChannel)
-      end
-    elseif commandlist[1] == "win" then
-      if commandlist[2] == nil then
-        Error("A channel name (like SAY, RAID, RAID_WARNING, etc) must be provided")
-      else
-        ChatLootBidder_Store.WinnerAnnounceChannel = commandlist[2]
-        Message("Winner announce channel set to " .. ChatLootBidder_Store.WinnerAnnounceChannel)
-      end
-		elseif commandlist[1] == "info" then
-      ShowInfo()
+    elseif commandlist[1] == "bid" and commandlist[2] then
+      HandleChannel("BidChannel", commandlist[2])
+    elseif commandlist[1] == "session" and commandlist[2] then
+      HandleChannel("SessionAnnounceChannel", commandlist[2])
+    elseif commandlist[1] == "win" and commandlist[2] then
+      HandleChannel("WinnerAnnounceChannel", commandlist[2])
     elseif commandlist[1] == "end" then
       ChatLootBidder:End()
     elseif commandlist[1] == "clear" then
@@ -845,6 +783,33 @@ local InitSlashCommands = function()
       local optionalTimer = ToWholeNumber(commandlist[getn(commandlist)], -1)
       ChatLootBidder:Start(itemLinks, optionalTimer)
 		end
+  end
+end
+
+local function LoadText()
+  local k,v,g
+  for k,v in pairs(T) do
+    if type(k) == "string" then
+      g = getglobal("ChatLootBidderOptionsFrame"..k.."Text")
+      if g then g:SetText(v) end
+    end
+  end
+end
+
+local function LoadValues()
+  local k,v,g,t
+  for k,v in pairs(ChatLootBidder_Store) do
+    t = type(v)
+    g = getglobal("ChatLootBidderOptionsFrame"..k)
+    if g and g.SetChecked and t == "boolean" then
+      g:SetChecked(v)
+    elseif g and k == "DefaultSessionMode" then
+      g:SetValue(v == "MSOS" and 1 or 0)
+    elseif g and g.SetValue and (t == "string" or t == "number") then
+      g:SetValue(v)
+    else
+      Trace(k .. " <noGui> " .. tostring(v))
+    end
   end
 end
 
@@ -1115,6 +1080,9 @@ end
 function ChatLootBidder.ADDON_LOADED()
   LoadVariables()
   InitSlashCommands()
+  -- Load Options.xml values
+  LoadText()
+  LoadValues()
   this:UnregisterEvent("ADDON_LOADED")
 end
 
@@ -1197,7 +1165,7 @@ end
 -- AtlasLoot_Data["AtlasLootItems"]["BWLRazorgore"][1]
 -- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
 function ValidateItemName(n)
-  if ChatLootBidder_Store.DisableItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return unpack({-1, n, -1, "", ""}) end
+  if not ChatLootBidder_Store.ItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return unpack({-1, n, -1, "", ""}) end
   for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
     for _,dataSet in raidBoss do
       if dataSet then

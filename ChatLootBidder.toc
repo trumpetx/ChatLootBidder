@@ -12,6 +12,8 @@ VersionUtil.lua
 csv.lua
 json.lua
 
+i18n.lua
+
 Options.xml
 SrEdit.xml
 ChatLootBidder.xml
