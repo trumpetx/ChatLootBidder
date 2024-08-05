@@ -65,6 +65,11 @@ local function LoadVariables()
   ChatLootBidder_Store.DefaultMaxSoftReserves = 1
 end
 
+local function Trim(str)
+  local _start, _end, _match = string.find(str, '^%s*(.-)%s*$')
+  return _match or ""
+end
+
 local function ToWholeNumber(numberString, default)
   if default == nil then default = 0 end
   if numberString == nil then return default end
@@ -187,7 +192,7 @@ local function UnFlatten(tbl)
   for _, arr in pairs(tbl) do
     if unflattened[arr[1]] == nil then unflattened[arr[1]] = {} end
     if arr[2] ~= nil then
-      table.insert(unflattened[arr[1]], arr[2])
+      table.insert(unflattened[Trim(arr[1])], Trim(arr[2]))
     end
   end
   return unflattened
@@ -317,6 +322,13 @@ local function Srs(n)
   if srs ~= nil then return srs end
   ChatLootBidder_Store.SoftReserveSessions[n] = {}
   return ChatLootBidder_Store.SoftReserveSessions[n];
+end
+
+function ChatLootBidder:LoadedSoftReserveSession()
+  if softReserveSessionName then
+    return unpack({softReserveSessionName, ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName]})
+  end
+  return unpack({nil, nil})
 end
 
 local function HandleSrRemove(bidder, item)
@@ -590,7 +602,7 @@ function ChatLootBidder:Unstage(item, redraw)
   if redraw then ChatLootBidder:RedrawStage() end
 end
 
-local function HandleSrDelete(providedName)
+function ChatLootBidder:HandleSrDelete(providedName)
   if softReserveSessionName == nil and providedName == nil then
     Error("No Soft Reserve session loaded or provided for deletion")
   elseif providedName == nil then
@@ -603,13 +615,18 @@ local function HandleSrDelete(providedName)
     ChatLootBidder_Store.SoftReserveSessions[providedName] = nil
     Message("Deleted Soft Reserve session: " .. providedName)
   end
+  if providedName == nil or providedName == softReserveSessionName then
+    SrEditFrame:Hide()
+  end
 end
 
-local function HandleSrLoad(providedName)
+function ChatLootBidder:HandleSrLoad(providedName)
   softReserveSessionName = providedName or date("%y-%m-%d")
   local srs = Srs()
-  ValidateAndWarn(srs)
+  ValidateFixAndWarn(srs)
   Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(srs) .. " players with soft reserves")
+  SrEditFrame:Hide()
+  ChatLootBidderOptionsFrame_Init(softReserveSessionName)
 end
 
 local function HandleSrUnload()
@@ -699,16 +716,12 @@ local InitSlashCommands = function()
       end
       local subcommand = commandlist[2]
       if commandlist[2] == "load" then
-        HandleSrLoad(commandlist[3])
-        SrEditFrame:Hide()
+        ChatLootBidder:HandleSrLoad(commandlist[3])
       elseif commandlist[2] == "unload" then
         HandleSrUnload()
         SrEditFrame:Hide()
       elseif commandlist[2] == "delete" then
-        HandleSrDelete(commandlist[3])
-        if commandlist[3] == nil or commandlist[3] == softReserveSessionName then
-          SrEditFrame:Hide()
-        end
+        ChatLootBidder:HandleSrDelete(commandlist[3])
       elseif commandlist[2] == "show" then
         HandleSrShow()
       elseif commandlist[2] == "csv" or commandlist[2] == "json" or commandlist[2] == "semicolon" or commandlist[2] == "raidresfly" then
@@ -835,15 +848,45 @@ local function HandleSrQuery(bidder)
   SendResponse(msg, bidder)
 end
 
+local function AtlasLootLoaded()
+  return (AtlasLoot_Data and AtlasLoot_Data["AtlasLootItems"]) ~= nil
+end
+
+-- Ex/
+-- AtlasLoot_Data["AtlasLootItems"]["BWLRazorgore"][1]
+-- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
+local function ValidateItemName(n)
+  if not ChatLootBidder_Store.ItemValidation or not AtlasLootLoaded() then return unpack({-1, n, -1, "", ""}) end
+  for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
+    for _,dataSet in raidBoss do
+      if dataSet then
+        local itemNumber, icon, nameQuery, _, dropRate = unpack(dataSet)
+        if nameQuery then
+          local _start, _end, _quality, _name = string.find(nameQuery, '^=q(%d)=(.-)$')
+          if _name and string.lower(_name) == string.lower(n) then
+            return unpack({itemNumber, _name, _quality, raidBossKey, dropRate})
+          end
+        end
+      end
+    end
+  end
+  return nil
+end
+
 local function HandleSrAdd(bidder, itemName)
+  itemName = Trim(itemName)
   if Srs(softReserveSessionName)[bidder] == nil then
     Srs(softReserveSessionName)[bidder] = {}
   end
   local sr = Srs(softReserveSessionName)[bidder]
-  local itemNumber, _, _quality, raidBoss, dropRate = ValidateItemName(itemName)
+  local itemNumber, nameFix, _quality, raidBoss, dropRate = ValidateItemName(itemName)
   if itemNumber == nil then
     SendResponse(itemName .. " does not appear to be a valid item name (AtlasLoot).  If this is incorrect, the Loot Master will need to manually input the item name or disable item validation.", bidder)
   else
+    if nameFix ~= itemName then
+      SendResponse(itemName .. " fixed to " .. nameFix)
+      itemName = nameFix
+    end
     table.insert(sr, itemName)
     if TableLength(sr) > ChatLootBidder_Store.DefaultMaxSoftReserves then
       local pop = table.remove(sr, 1)
@@ -852,6 +895,7 @@ local function HandleSrAdd(bidder, itemName)
       end
     end
   end
+  ChatLootBidderOptionsFrame_Reload()
 end
 
 function ChatFrame_OnEvent(event)
@@ -1123,11 +1167,6 @@ function ChatLootBidder.LOOT_OPENED()
   ChatLootBidder:RedrawStage()
 end
 
-local function Trim(str)
-  local _start, _end, _match = string.find(str, '^%s*(.-)%s*$')
-  return _match or ""
-end
-
 
 -- [00:00]Autozhot: Autozhot - Band of Accuria
 local function ParseRaidResFly(text)
@@ -1161,35 +1200,20 @@ local function ParseSemicolon(text)
   return t
 end
 
--- Ex/
--- AtlasLoot_Data["AtlasLootItems"]["BWLRazorgore"][1]
--- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
-function ValidateItemName(n)
-  if not ChatLootBidder_Store.ItemValidation or not AtlasLoot_Data or not AtlasLoot_Data["AtlasLootItems"] then return unpack({-1, n, -1, "", ""}) end
-  for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
-    for _,dataSet in raidBoss do
-      if dataSet then
-        local itemNumber, icon, nameQuery, _, dropRate = unpack(dataSet)
-        local _start, _end, _quality, _name = string.find(nameQuery, '^=q(%d)=(.-)$')
-        if _name == n then
-          return unpack({itemNumber, _name, _quality, raidBossKey, dropRate})
-        end
-      end
-    end
-  end
-  return nil
-end
-
-function ValidateAndWarn(t)
-  local k,v,i,len
+function ValidateFixAndWarn(t)
+  local k,k2,v,i,len
   for k,v in pairs(t) do
     len = getn(v)
     if len > ChatLootBidder_Store.DefaultMaxSoftReserves then
       Error(k .. " has " .. len .. " soft reserves loaded (max=" .. ChatLootBidder_Store.DefaultMaxSoftReserves .. ")")
     end
-    for _,i in pairs(v) do
-      if not ValidateItemName(i) then
+    for k2,i in pairs(v) do
+      local itemNumber, nameFix, _, _, _ = ValidateItemName(i)
+      if itemNumber == nil then
         Error(i .. " does not appear to be a valid item name (AtlasLoot)")
+      elseif nameFix ~= i then
+        Message(i .. " fixed to " .. nameFix)
+        v[k2] = nameFix
       end
     end
   end
@@ -1210,8 +1234,9 @@ function ChatLootBidder:DecodeAndSave(text, parent)
     Error("No encoding provided")
     return
   end
-  ValidateAndWarn(t)
+  ValidateFixAndWarn(t)
   ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName] = t
+  ChatLootBidderOptionsFrame_Reload()
   parent:Hide()
 end
 

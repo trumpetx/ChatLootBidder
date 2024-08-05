@@ -108,7 +108,7 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="50" y="-205"/>
+                    <AbsDimension x="50" y="-215"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -128,7 +128,7 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="230" y="-55"/>
+                    <AbsDimension x="230" y="-95"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -137,7 +137,7 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="230" y="-85"/>
+                    <AbsDimension x="230" y="-125"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -146,7 +146,43 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="230" y="-115"/>
+                    <AbsDimension x="230" y="-155"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentCurrentSoftReserve" inherits="GameFontNormal" text="No List">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="245" y="-190"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentCurrentSoftReserveLoaded" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="200" y="-220"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentCurrentSoftReservePlayers" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="200" y="-240"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentCurrentSoftReserveItems" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="200" y="-260"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -157,7 +193,7 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="200" y="-205"/>
+                    <AbsDimension x="200" y="-305"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -166,7 +202,7 @@
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
-                    <AbsDimension x="230" y="-235"/>
+                    <AbsDimension x="230" y="-335"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -309,11 +345,29 @@
       </Frame>
 
       <!-- SR Mode -->
+      <Slider name="$parentDefaultMaxSoftReserves" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="1" maxValue="5" inherits="OptionsSliderTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-55"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            getglobal(this:GetName() .. 'Low'):SetText("1")
+            getglobal(this:GetName() .. 'High'):SetText("5")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
       <CheckButton name="$parentItemValidation" inherits="MyOptionsCheckButtonTemplate">
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-45"/>
+              <AbsDimension x="200" y="-85"/>
             </Offset>
           </Anchor>
         </Anchors>
@@ -322,7 +376,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-75" />
+              <AbsDimension x="200" y="-115" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -331,18 +385,114 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-105" />
+              <AbsDimension x="200" y="-145" />
             </Offset>
           </Anchor>
         </Anchors>
       </CheckButton>
+      <Button name="$parentSRBack" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="32" y="32" />
+        </Size>
+        <NormalTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Up"/>
+        <PushedTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Down"/>
+        <DisabledTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Disabled"/>
+        <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-180"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderOptionsFrame_Back()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
+      <Button name="$parentSRNext" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="32" y="32" />
+        </Size>
+        <NormalTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Up"/>
+        <PushedTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Down"/>
+        <DisabledTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Disabled"/>
+        <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="345" y="-180"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderOptionsFrame_Next()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
+      <Button name="$parentSRDelete" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="16" y="16" />
+        </Size>
+        <NormalTexture file="Interface/BUTTONS/UI-MinusButton-Up"/>
+        <PushedTexture file="Interface/BUTTONS/UI-MinusButton-Down"/>
+        <DisabledTexture file="Interface/BUTTONS/UI-MinusButton-Disabled"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-PlusButton-Hilight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="375" y="-180"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderOptionsFrame_Delete()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
+      <Button name="$parentSRLoad" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="16" y="16" />
+        </Size>
+        <NormalTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Up"/>
+        <PushedTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Down"/>
+        <DisabledTexture file="Interface/BUTTONS/UI-PlusButton-Disabled"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Hilight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="375" y="-195"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderOptionsFrame_Load()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
 
       <!-- DKP Mode -->
       <CheckButton name="$parentBreakTies" inherits="MyOptionsCheckButtonTemplate">
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-225" />
+              <AbsDimension x="200" y="-325" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -351,7 +501,7 @@
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-275"/>
+              <AbsDimension x="200" y="-375"/>
             </Offset>
           </Anchor>
         </Anchors>
@@ -369,7 +519,7 @@
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
-              <AbsDimension x="200" y="-325"/>
+              <AbsDimension x="200" y="-420"/>
             </Offset>
           </Anchor>
         </Anchors>
@@ -403,6 +553,9 @@
       </Button>
     </Frames>
     <Scripts>
+      <OnShow>
+        ChatLootBidderOptionsFrame_Init(ChatLootBidderFrame.softReserveSessionName)
+      </OnShow>
       <OnLoad>
         this:RegisterForDrag("LeftButton")
         tinsert(UISpecialFrames, this:GetName())
