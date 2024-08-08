@@ -289,7 +289,11 @@ local function MessageWinnerChannel(message)
 end
 
 local function MessageStartChannel(message)
-  SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message)
+  if IsInRaid(me) then
+    SendToChatChannel(ChatLootBidder_Store.SessionAnnounceChannel, message)
+  else
+    Message(message)
+  end
   Trace("<START>" .. message)
 end
 
@@ -629,16 +633,24 @@ function ChatLootBidder:HandleSrLoad(providedName)
   ChatLootBidderOptionsFrame_Init(softReserveSessionName)
 end
 
-local function HandleSrUnload()
+function ChatLootBidder:HandleSrUnload()
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
     Message("Unloaded Soft Reserve session: " .. softReserveSessionName)
     softReserveSessionName = nil
   end
+  ChatLootBidderOptionsFrame_Reload()
+  SrEditFrame:Hide()
 end
 
-local function HandleSrShow()
+function ChatLootBidder:HandleSrInstructions()
+  MessageStartChannel("Set your SR: /w " .. PlayerWithClassColor(me) .. " sr [item-link or exact-item-name]")
+  MessageStartChannel("Get your current SR: /w " .. PlayerWithClassColor(me) .. " sr")
+  MessageStartChannel("Clear your current SR: /w " .. PlayerWithClassColor(me) .. " sr clear")
+end
+
+function ChatLootBidder:HandleSrShow()
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
@@ -653,8 +665,13 @@ local function HandleSrShow()
     local player
     for _, player in pairs(keys) do
       local sr = srs[player]
-      if IsInRaid(player) and not IsTableEmpty(sr) then
-        MessageStartChannel(PlayerWithClassColor(player) .. ": " .. table.concat(sr, ", "))
+      if not IsTableEmpty(sr) then
+        local msg = PlayerWithClassColor(player) .. ": " .. table.concat(sr, ", ")
+        if IsInRaid(player) then
+          MessageStartChannel(msg)
+        else
+          Message(msg)
+        end
       end
     end
   end
@@ -684,6 +701,8 @@ end
 
 -- This is the most simple pretty print function possible applciable to { key : [value, value, value] } structures only
 local function PrettyPrintJson(encoded)
+  -- The default empty structure should be an object, not an array
+  if encoded == "[]" then return "{}" end
   encoded = string.gsub(encoded, "{", "{\n")
   encoded = string.gsub(encoded, "}", "\n}")
   encoded = string.gsub(encoded, "],", "],\n")
@@ -695,6 +714,47 @@ local function HandleChannel(prop, channel)
   ChatLootBidder_Store[prop] = channel
   Message(T[prop] .. " announce channel set to " .. channel)
   getglobal("ChatLootBidderOptionsFrame" .. prop):SetValue(channel)
+end
+
+function ChatLootBidder:HandleEncoding(encodingType)
+  if softReserveSessionName == nil then
+    Error("No Soft Reserve list is loaded")
+  else
+    local encoded
+    if encodingType == "csv" then
+      encoded = csv:toCSV(Flatten(Srs()))
+    elseif encodingType == "json" then
+      encoded = PrettyPrintJson(json.encode(Srs()))
+    elseif encodingType == "semicolon" then
+      encoded = EncodeSemicolon()
+    elseif encodingType == "raidresfly" then
+      encoded = EncodeRaidResFly()
+    end
+    if not SrEditFrame:IsVisible() then
+      SrEditFrame:Show()
+    elseif SrEditFrameHeaderString:GetText() == encodingType then
+      SrEditFrame:Hide()
+    end
+    SrEditFrameText:SetText(encoded)
+    SrEditFrameHeaderString:SetText(encodingType)
+  end
+end
+
+function ChatLootBidder:ToggleSrLock(command)
+  if softReserveSessionName == nil then
+    Error("No Soft Reserve session loaded")
+  else
+    if command then
+      softReservesLocked = command == "lock"
+    else
+      softReservesLocked = not softReservesLocked
+    end
+    MessageStartChannel("Soft Reserves for " .. softReserveSessionName .. " are now " .. (softReservesLocked and "LOCKED" or "UNLOCKED"))
+  end
+end
+
+function ChatLootBidder:IsLocked()
+  return softReservesLocked
 end
 
 local InitSlashCommands = function()
@@ -719,42 +779,16 @@ local InitSlashCommands = function()
         ChatLootBidder:HandleSrLoad(commandlist[3])
       elseif commandlist[2] == "unload" then
         HandleSrUnload()
-        SrEditFrame:Hide()
       elseif commandlist[2] == "delete" then
         ChatLootBidder:HandleSrDelete(commandlist[3])
       elseif commandlist[2] == "show" then
-        HandleSrShow()
+        ChatLootBidder:HandleSrShow()
       elseif commandlist[2] == "csv" or commandlist[2] == "json" or commandlist[2] == "semicolon" or commandlist[2] == "raidresfly" then
-        if softReserveSessionName == nil then
-          Error("No Soft Reserve list is loaded")
-        elseif not SrEditFrame:IsVisible() then
-          SrEditFrame:Show()
-          local encoded
-          if commandlist[2] == "csv" then
-            encoded = csv:toCSV(Flatten(Srs()))
-          elseif commandlist[2] == "json" then
-            encoded = PrettyPrintJson(json.encode(Srs()))
-          elseif commandlist[2] == "semicolon" then
-            encoded = EncodeSemicolon()
-          elseif commandlist[2] == "raidresfly" then
-            encoded = EncodeRaidResFly()
-          end
-          SrEditFrameText:SetText(encoded)
-          SrEditFrameHeaderString:SetText(commandlist[2])
-        else
-          SrEditFrame:Hide()
-        end
+        ChatLootBidder:HandleEncoding(commandlist[2])
       elseif commandlist[2] == "lock" or commandlist[2] == "unlock" then
-        if softReserveSessionName == nil then
-          Error("No Soft Reserve session loaded")
-        else
-          softReservesLocked = commandlist[2] == "lock"
-          MessageStartChannel("Soft Reserves for " .. softReserveSessionName .. " are now " .. string.upper(commandlist[2]) .. "ED")
-        end
+        ChatLootBidder:ToggleSrLock(commandlist[2])
       elseif commandlist[2] == "instructions" then
-        MessageStartChannel("Set your SR: /w " .. PlayerWithClassColor(me) .. " sr [item-link or exact-item-name]")
-        MessageStartChannel("Get your current SR: /w " .. PlayerWithClassColor(me) .. " sr")
-        MessageStartChannel("Clear your current SR: /w " .. PlayerWithClassColor(me) .. " sr clear")
+        ChatLootBidder:HandleSrInstructions()
       else
         Error("Unknown 'sr' subcommand: " .. (commandlist[2] == nil and "nil" or commandlist[2]))
         Error("Valid values are: load, unload, delete, show, lock, unlock, json, semicolon, raidresfly, csv, instructions")

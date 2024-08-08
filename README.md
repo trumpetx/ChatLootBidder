@@ -60,13 +60,13 @@ Raiders can cancel bids:
 ### Raid Leader
 Soft Reserves are like an extra meta-session on top of `/loot msos` mode.  The Master Looter can load a Soft Reserve list by executing the command: `/loot sr load` which takes an optional parameter of the list name.  For example, `/loot sr load bwl` will load the "bwl" list (to allow SRs to persist week to week if desired).  Not providing a list name will simply use today's date in the format YY-MM-DD for the list name.
 
-Once the Soft Reserve list is loaded, you can perform the following actions:
+Once the Soft Reserve list is loaded, you can perform the following actions (these also have GUI buttons in `/loot`)
 * `/loot sr show` - list out (to the "Session Channel") all current Soft Reserve bids (non-raid members are not listed)
+* `/loot sr instructions` - Spam basic Soft Reserve instructions to the "Session Channel"
 * `/loot sr lock` - Lock the current Soft Reserve list
 * `/loot sr unlock` - Unock the current Soft Reserve list
 * `/loot sr delete` - Delete the currently loaded Soft Reserve list or `/loot sr delete list-name` to delete the 'list-name' list.
 * `/loot sr unload` - Unload the current list and turn off Soft Reserve functionality.
-* `/loot sr instructions` - Spam basic Soft Reserve instructions to the "Session Channel"
 * `/loot sr json` - Suspend Soft Reserve functionality and manually edit the loaded list in raw JSON format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
 * `/loot sr semicolon` - Suspend Soft Reserve functionality and manually edit the loaded list in raw semicolon-separated format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
 * `/loot sr csv` - Suspend Soft Reserve functionality and manually edit the loaded list in csv format.  Use this mode for mass importing/exporting Soft Reserves from other tools.
@@ -80,6 +80,8 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.7.1
+  * Added a GUI for Soft Reserve Managing / Editing / Importing
 * 1.7.0
   * Adding a GUI for confiuration
     * Most slash-commands for configuration were removed and should now only be set via the GUI panel

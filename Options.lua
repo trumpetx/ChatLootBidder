@@ -51,11 +51,15 @@ function ChatLootBidderOptionsFrame_Next()
   ChatLootBidderOptionsFrameCurrentSoftReserve:SetText(k or "No List")
 end
 
+function ChatLootBidderOptionsFrame_ToggleLock()
+  ChatLootBidderFrame:ToggleSrLock()
+  ChatLootBidderOptionsFrame_Reload()
+end
+
 function ChatLootBidderOptionsFrame_Reload()
   local srName, sr = ChatLootBidderFrame:LoadedSoftReserveSession()
   if sr then
-    local players = 0
-    local items = 0
+    local items, players, i = 0, 0, nil
     for _,i in pairs(sr) do
       players = players + 1
       items = items + getn(i)
@@ -63,19 +67,38 @@ function ChatLootBidderOptionsFrame_Reload()
     ChatLootBidderOptionsFrameCurrentSoftReserveLoaded:SetText("Loaded: " .. srName)
     ChatLootBidderOptionsFrameCurrentSoftReservePlayers:SetText("Players: " .. players)
     ChatLootBidderOptionsFrameCurrentSoftReserveItems:SetText("Items: " .. items)
+    for _,i in pairs({"csv","json","raidresfly","semicolon"}) do
+      getglobal("ChatLootBidderOptionsFrameSREncode_" .. i):Show()
+    end
+    ChatLootBidderOptionsFrameSRToggleLock:Show()
+    ChatLootBidderOptionsFrameSRList:Show()
+    ChatLootBidderOptionsFrameSRInstructions:Show()
+    ChatLootBidderOptionsFrameSRToggleLock:SetText(ChatLootBidderFrame:IsLocked() and "Unlock" or "Lock")
   else
     ChatLootBidderOptionsFrameCurrentSoftReserveLoaded:SetText("Loaded: ")
     ChatLootBidderOptionsFrameCurrentSoftReservePlayers:SetText("Players: ")
     ChatLootBidderOptionsFrameCurrentSoftReserveItems:SetText("Items: ")
+    local i
+    for _,i in pairs({"csv","json","raidresfly","semicolon"}) do
+      getglobal("ChatLootBidderOptionsFrameSREncode_" .. i):Hide()
+    end
+    ChatLootBidderOptionsFrameSRToggleLock:Hide()
+    ChatLootBidderOptionsFrameSRList:Hide()
+    ChatLootBidderOptionsFrameSRInstructions:Hide()
   end
 end
 
 function ChatLootBidderOptionsFrame_Delete()
   local listName = ChatLootBidderOptionsFrameCurrentSoftReserve:GetText()
   if listName == "No List" then return end
-  ChatLootBidderOptionsFrame_Next()
-  ChatLootBidderFrame:HandleSrDelete(listName)
-  ChatLootBidderOptionsFrame_Reload()
+  local srName, sr = ChatLootBidderFrame:LoadedSoftReserveSession()
+  if sr then
+    ChatLootBidderFrame:HandleSrUnload(listName)
+  else
+    ChatLootBidderOptionsFrame_Next()
+    ChatLootBidderFrame:HandleSrDelete(listName)
+    ChatLootBidderOptionsFrame_Reload()
+  end
 end
 
 function ChatLootBidderOptionsFrame_Load()
