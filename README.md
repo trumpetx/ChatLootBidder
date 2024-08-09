@@ -20,14 +20,12 @@ __Items that are not goals:__
 ## Addon Setup
 Most configuration should be set to a reasonable default
 * `/loot` Show the GUI options menu
-![image](https://github.com/user-attachments/assets/c3f936ff-3740-4341-827a-9b87e00daf90)
+![image](https://github.com/user-attachments/assets/d508a034-9c37-4d8d-9815-f6eb570c08ff)
 
 * Custom Channels (unable to set in GUI)
   * `/loot bid CustomChannel` Set the "Bid Channel" to the custom channel "CustomChannel"
   * `/loot session CustomChannel` Sets the "Session Announce Channel" to the custom channel "CustomChannel"
   * `/loot win CustomChannel` Sets the "Winner Announce Channel" to the custom channel "CustomChannel"
-* `/loot maxbid 10000` Sets the max bid value at 10000 instead of the default: 5000.  You can thank very mean raiders for the need to create this setting :P.
-  * The minimum bid is not settable via the interactive chat, but you can modify it in your addon lua settings.  It is 1 by default.
 * `/loot debug 2` Sets the debug level to `2` which is VERY SPAMMY.  `1` is slightly less spammy than `2`.  This should not be necessary unless you're trying to debug the addon behavior.  `0` is the default and returns the addon to non-spam-you mode.
 ## Raid Usage
 Enabling Auto-Stage will render these chat commands unnecessary; however, they are still useful for testing.
