@@ -78,6 +78,10 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.7.2
+  * Separating 'Delete' and 'Unload' into separate buttons
+  * Separating 'Load' and 'Add' into separate buttons
+  * Allowing 'Add' to create new raids on the same calendar day
 * 1.7.1
   * Added a GUI for Soft Reserve Managing / Editing / Importing
 * 1.7.0
