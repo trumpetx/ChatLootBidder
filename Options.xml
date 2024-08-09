@@ -455,7 +455,7 @@
         </Anchors>
         <Scripts>
           <OnClick>
-            ChatLootBidderOptionsFrame_Delete()
+            ChatLootBidderOptionsFrame_Unload()
           </OnClick>
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
@@ -480,6 +480,54 @@
         <Scripts>
           <OnClick>
             ChatLootBidderOptionsFrame_Load()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
+      <Button name="$parentSRDelete" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="24" y="24" />
+        </Size>
+        <NormalTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Up"/>
+        <PushedTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Down"/>
+        <DisabledTexture file="Interface/BUTTONS/UI-MinusButton-Disabled"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Highlight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="387" y="-176"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderOptionsFrame_Delete()
+          </OnClick>
+          <OnShow>
+            this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
+          </OnShow>
+        </Scripts>
+      </Button>
+      <Button name="$parentSRLoad" frameStrata="MEDIUM">
+        <Size>
+          <AbsDimension x="16" y="16" />
+        </Size>
+        <NormalTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Up"/>
+        <PushedTexture file="Interface/BUTTONS/UI-PlusButton-Down"/>
+        <DisabledTexture file="Interface/BUTTONS/UI-PlusButton-Disabled"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-PlusButton-Hilight" alphaMode="ADD"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="391" y="-195"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            ChatLootBidderFrame:HandleSrAddDefault()
           </OnClick>
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );

@@ -624,13 +624,33 @@ function ChatLootBidder:HandleSrDelete(providedName)
   end
 end
 
-function ChatLootBidder:HandleSrLoad(providedName)
-  softReserveSessionName = providedName or date("%y-%m-%d")
+local function craftName(appender)
+  return date("%y-%m-%d") .. (appender == 0 and "" or ("-"..appender))
+end
+
+function ChatLootBidder:HandleSrAddDefault()
+  local appender = 0
+  while ChatLootBidder_Store.SoftReserveSessions[craftName(appender)] ~= nil do
+    appender = appender + 1
+  end
+  softReserveSessionName = craftName(appender)
   local srs = Srs()
-  ValidateFixAndWarn(srs)
-  Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(srs) .. " players with soft reserves")
+  Message("New Soft Reserve list [" .. softReserveSessionName .. "] loaded")
   SrEditFrame:Hide()
   ChatLootBidderOptionsFrame_Init(softReserveSessionName)
+end
+
+function ChatLootBidder:HandleSrLoad(providedName)
+  if providedName then
+    softReserveSessionName = providedName
+    local srs = Srs()
+    ValidateFixAndWarn(srs)
+    Message("Soft Reserve list [" .. softReserveSessionName .. "] loaded with " .. TableLength(srs) .. " players with soft reserves")
+    SrEditFrame:Hide()
+    ChatLootBidderOptionsFrame_Init(softReserveSessionName)
+  else
+    ChatLootBidder:HandleSrAddDefault()
+  end
 end
 
 function ChatLootBidder:HandleSrUnload()

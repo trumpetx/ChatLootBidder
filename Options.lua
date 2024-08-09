@@ -88,24 +88,26 @@ function ChatLootBidderOptionsFrame_Reload()
   end
 end
 
+function ChatLootBidderOptionsFrame_Unload()
+  local srName, sr = ChatLootBidderFrame:LoadedSoftReserveSession()
+  ChatLootBidderFrame:HandleSrUnload(srName)
+end
+
 function ChatLootBidderOptionsFrame_Delete()
   local listName = ChatLootBidderOptionsFrameCurrentSoftReserve:GetText()
   if listName == "No List" then return end
   local srName, sr = ChatLootBidderFrame:LoadedSoftReserveSession()
-  if sr then
+  if sr and srName == listName then
     ChatLootBidderFrame:HandleSrUnload(listName)
-  else
-    ChatLootBidderOptionsFrame_Next()
-    ChatLootBidderFrame:HandleSrDelete(listName)
-    ChatLootBidderOptionsFrame_Reload()
   end
+  ChatLootBidderFrame:HandleSrDelete(listName)
+  ChatLootBidderOptionsFrame_Init()
 end
 
 function ChatLootBidderOptionsFrame_Load()
   local listName = ChatLootBidderOptionsFrameCurrentSoftReserve:GetText()
   if listName == "No List" then listName = nil end
   ChatLootBidderFrame:HandleSrLoad(listName)
-  ChatLootBidderOptionsFrame_Reload()
 end
 
 function ChatLootBidderOptionsFrame_Init(providedName)
