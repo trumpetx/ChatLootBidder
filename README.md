@@ -86,8 +86,8 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * 1.7.1
   * Added a GUI for Soft Reserve Managing / Editing / Importing
 * 1.7.0
-  * Adding a GUI for confiuration
-    * Most slash-commands for configuration were removed and should now only be set via the GUI panel
+  * **Adding a GUI for confiuration**
+    * *Most slash-commands for configuration were removed and should now only be set via the GUI panel*
 * 1.6.3
   * Added Soft Reserve name validation (Requires AtlasLoot [1.12.1](https://legacy-wow.com/vanilla-addons/atlasloot-enhanced/), [Turtle](https://github.com/Lexiebean/AtlasLoot))
 * 1.6.1-2
@@ -100,15 +100,15 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
     * When a loot session is started, items that are SR'd will be removed from the MSOS bidding list. SR bidders will be notified via whisper.
     * When the loot session ends, SR items will be announced and/or rolled off.
     * Ability to import/export with various formats: csv, json, semicolon, raidresfly (Ex/ `/loot sr json`)
-  * Modified `/loot autostageloot` so that it takes it 2 parameters (min and max) so you can effectively filter out legendary drops and do epics only like this: `/loot autostageloot 4 4`
+  * ~~Modified `/loot autostageloot` so that it takes it 2 parameters (min and max) so you can effectively filter out legendary drops and do epics only like this: `/loot autostageloot 4 4`~~
 * 1.5.2
   * Added the "Mode" (MSOS or DKP) to the Stage GUI frame for the Master Looter's reference
 * 1.5.1
-  * Enabling the setting of previously added properties:
-    * `/loot autostage` which will turn on/off the GUI popup when you loot a boss
-    * `/loot autostageloot` which sets the minimum rairity of what is put into the GUI stage (0-5); 4 (epic) is the default
+    * ~~Enabling the setting of previously added properties:~~
+    * ~~`/loot autostage` which will turn on/off the GUI popup when you loot a boss~~
+    * ~~`/loot autostageloot` which sets the minimum rairity of what is put into the GUI stage (0-5); 4 (epic) is the default~~
 * 1.5.0
-  * Adding MS/OS mode for non-bid raids `/loot msos` to switch modes and `/loot dkp` to switch back
+  * ~~Adding MS/OS mode for non-bid raids `/loot msos` to switch modes and `/loot dkp` to switch back~~
 * 1.4.4
   * Fixing a bug with duplicate whisper filtering that caused the same whisper from different people to be filtered
 * 1.4.3
