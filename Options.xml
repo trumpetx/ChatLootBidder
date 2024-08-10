@@ -438,7 +438,7 @@
           </OnShow>
         </Scripts>
       </Button>
-      <Button name="$parentSRDelete" frameStrata="MEDIUM">
+      <Button name="$parentSRUnload" frameStrata="MEDIUM">
         <Size>
           <AbsDimension x="16" y="16" />
         </Size>
@@ -460,16 +460,22 @@
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
           </OnShow>
+          <OnEnter>
+				    ChatLootBidderOptionsFrame_OnTooltip()
+          </OnEnter>
+          <OnLeave>
+				    GameTooltip:Hide()
+          </OnLeave>
         </Scripts>
       </Button>
       <Button name="$parentSRLoad" frameStrata="MEDIUM">
         <Size>
           <AbsDimension x="16" y="16" />
         </Size>
-        <NormalTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Up"/>
-        <PushedTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Down"/>
+        <NormalTexture file="Interface/BUTTONS/UI-PlusButton-Up"/>
+        <PushedTexture file="Interface/BUTTONS/UI-PlusButton-Down"/>
         <DisabledTexture file="Interface/BUTTONS/UI-PlusButton-Disabled"/>
-        <HighlightTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Hilight" alphaMode="ADD"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-PlusButton-Hilight" alphaMode="ADD"/>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
@@ -484,6 +490,12 @@
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
           </OnShow>
+          <OnEnter>
+				    ChatLootBidderOptionsFrame_OnTooltip()
+          </OnEnter>
+          <OnLeave>
+				    GameTooltip:Hide()
+          </OnLeave>
         </Scripts>
       </Button>
       <Button name="$parentSRDelete" frameStrata="MEDIUM">
@@ -492,7 +504,7 @@
         </Size>
         <NormalTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Up"/>
         <PushedTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Down"/>
-        <DisabledTexture file="Interface/BUTTONS/UI-MinusButton-Disabled"/>
+        <DisabledTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Up"/>
         <HighlightTexture file="Interface/BUTTONS/UI-Panel-MinimizeButton-Highlight" alphaMode="ADD"/>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
@@ -508,16 +520,22 @@
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
           </OnShow>
+          <OnEnter>
+				    ChatLootBidderOptionsFrame_OnTooltip()
+          </OnEnter>
+          <OnLeave>
+				    GameTooltip:Hide()
+          </OnLeave>
         </Scripts>
       </Button>
-      <Button name="$parentSRLoad" frameStrata="MEDIUM">
+      <Button name="$parentSRAdd" frameStrata="MEDIUM">
         <Size>
           <AbsDimension x="16" y="16" />
         </Size>
         <NormalTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Up"/>
-        <PushedTexture file="Interface/BUTTONS/UI-PlusButton-Down"/>
+        <PushedTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Down"/>
         <DisabledTexture file="Interface/BUTTONS/UI-PlusButton-Disabled"/>
-        <HighlightTexture file="Interface/BUTTONS/UI-PlusButton-Hilight" alphaMode="ADD"/>
+        <HighlightTexture file="Interface/BUTTONS/UI-AttributeButton-Encourage-Hilight" alphaMode="ADD"/>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
@@ -532,6 +550,12 @@
           <OnShow>
             this:SetFrameLevel( (this:GetParent()):GetFrameLevel() + 1 );
           </OnShow>
+          <OnEnter>
+            ChatLootBidderOptionsFrame_OnTooltip()
+          </OnEnter>
+          <OnLeave>
+            GameTooltip:Hide()
+          </OnLeave>
         </Scripts>
       </Button>
       <Button name="$parentSRToggleLock" inherits="OptionsButtonTemplate">

@@ -118,3 +118,14 @@ function ChatLootBidderOptionsFrame_Init(providedName)
   end
   ChatLootBidderOptionsFrame_Reload()
 end
+
+function ChatLootBidderOptionsFrame_OnTooltip()
+  local len = string.len("ChatLootBidderOptionsFrameSR")
+  local text = string.sub(this:GetName(), len+1)
+  if text then
+    GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+    GameTooltip:ClearLines()
+    GameTooltip:AddLine(text)
+    GameTooltip:Show()
+  end
+end
