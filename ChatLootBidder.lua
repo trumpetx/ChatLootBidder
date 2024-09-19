@@ -530,6 +530,7 @@ function ChatLootBidder:Start(items, timer, mode)
   if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
   ChatLootBidder:EndSessionButtonShown()
   session = {}
+  sessionMode = mode
   stage = nil
   if ChatLootBidder_Store.AutoLockSoftReserve and softReserveSessionName ~= nil and not softReservesLocked then
     softReservesLocked = true
