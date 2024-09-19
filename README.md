@@ -79,6 +79,8 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.7.3
+  * Fixing DKP mode (all sessions were started in MSOS mode)
 * 1.7.2
   * Separating 'Delete' and 'Unload' into separate buttons
   * Separating 'Load' and 'Add' into separate buttons
