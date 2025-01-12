@@ -480,7 +480,7 @@ local function BidSummary(announceWinners)
       MessageWinnerChannel(winnerMessage)
     end
     table.insert(summaries, summary)
-    if winnerTier == "sr" and ChatLootBidder_Store.DefaultAutoRemoveSrAfterWin then
+    if winnerTier == "sr" and ChatLootBidder_Store.AutoRemoveSrAfterWin then
       HandleSrRemove(winner[1], item)
     end
   end
@@ -559,6 +559,7 @@ function ChatLootBidder:Start(items, timer, mode)
     else
       table.insert(startChannelMessage, i .. " SR (" .. srLen .. ")")
       session[i]["sr"] = {}
+      session[i]["cancel"] = {}
       session[i]["roll"] = {}
       for _,sr in pairs(srsOnItem) do
         session[i]["sr"][sr] = 1
@@ -1082,7 +1083,7 @@ function ChatFrame_OnEvent(event)
       roll[bidder] = -1
       received = "Your roll bid for " .. item .. " has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
     end
-    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. amt)))
+    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. amt)) .. " " .. item)
     SendResponse(received, bidder)
     return
   else
