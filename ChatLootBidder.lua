@@ -480,7 +480,7 @@ local function BidSummary(announceWinners)
       MessageWinnerChannel(winnerMessage)
     end
     table.insert(summaries, summary)
-    if winnerTier == "sr" and ChatLootBidder_Store.AutoRemoveSrAfterWin then
+    if winnerTier == "sr" and ChatLootBidder_Store.DefaultAutoRemoveSrAfterWin then
       HandleSrRemove(winner[1], item)
     end
   end
