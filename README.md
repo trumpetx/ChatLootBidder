@@ -79,6 +79,12 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+* 1.7.5
+  * Properly removing someone's SR when they win (when configured)
+  * Fixing error when canceling a bid in SR mode
+  * Announcing the item someone is bidding for when announce is enabed (previosuly only announced the tier/amt)
+* 1.7.4
+  * Updated ChatThrottleLib to get around Turtle chat bans
 * 1.7.3
   * Fixing DKP mode (all sessions were started in MSOS mode)
 * 1.7.2
