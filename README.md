@@ -97,7 +97,7 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
   * **Adding a GUI for confiuration**
     * *Most slash-commands for configuration were removed and should now only be set via the GUI panel*
 * 1.6.3
-  * Added Soft Reserve name validation (Requires AtlasLoot [1.12.1](https://legacy-wow.com/vanilla-addons/atlasloot-enhanced/), [Turtle](https://github.com/Lexiebean/AtlasLoot))
+  * Added Soft Reserve name validation (Requires AtlasLoot [1.12.1](https://legacy-wow.com/vanilla-addons/atlasloot-enhanced/), [Turtle](https://turtle-wow.fandom.com/wiki/AtlasLoot))
 * 1.6.1-2
   * Soft Reserve Bug Fixess
 * 1.6.0
