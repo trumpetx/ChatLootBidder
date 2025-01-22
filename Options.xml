@@ -21,7 +21,7 @@
   </Slider>
   <Frame name="ChatLootBidderOptionsFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
     <Size>
-      <AbsDimension x="420" y="500"/>
+      <AbsDimension x="420" y="540"/>
     </Size>
     <Anchors>
       <Anchor point="TOP">
@@ -297,7 +297,7 @@
           </Anchor>
         </Anchors>
       </Slider>
-      <Slider name="$parentTimerSeconds" orientation="HORIZONTAL" enableMouse="true" valueStep="1" minValue="0" maxValue="120" inherits="OptionsSliderTemplate">
+      <Slider name="$parentTimerSeconds" orientation="HORIZONTAL" enableMouse="true" valueStep="5" minValue="0" maxValue="120" inherits="OptionsSliderTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
@@ -704,6 +704,24 @@
           <OnLoad>
             getglobal(this:GetName() .. 'Low'):SetText("1")
             getglobal(this:GetName() .. 'High'):SetText("10000")
+          </OnLoad>
+          <OnValueChanged>
+            ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())
+          </OnValueChanged>
+        </Scripts>
+      </Slider>
+      <Slider name="$parentAltPenalty" orientation="HORIZONTAL" enableMouse="true" valueStep="5" minValue="0" maxValue="100" inherits="OptionsSliderTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="200" y="-485"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            getglobal(this:GetName() .. 'Low'):SetText("0")
+            getglobal(this:GetName() .. 'High'):SetText("100")
           </OnLoad>
           <OnValueChanged>
             ChatLootBidderFrame:SetPropValue(this:GetName(), this:GetValue(), this:GetParent():GetName())

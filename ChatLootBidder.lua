@@ -53,6 +53,7 @@ local function LoadVariables()
   ChatLootBidder_Store.TimerSeconds = ChatLootBidder_Store.TimerSeconds or 30
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
+  ChatLootBidder_Store.AltPenalty = ChatLootBidder_Store.AltPenalty or 0
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
   ChatLootBidder_Store.MaxRarity = ChatLootBidder_Store.MaxRarity or 5
   ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "MSOS" -- DKP | MSOS
@@ -351,6 +352,13 @@ local function HandleSrRemove(bidder, item)
   end
 end
 
+local function realAmt(amt, real)
+  if real ~= nil and amt ~= real then
+    return amt .. "(" .. real .. ")"
+  end
+  return amt
+end
+
 local function BidSummary(announceWinners)
   if session == nil then
     Error("There is no existing session")
@@ -364,6 +372,7 @@ local function BidSummary(announceWinners)
     local roll = itemSession["roll"]
     local cancel = itemSession["cancel"] or {}
     local notes = itemSession["notes"] or {}
+    local real = itemSession["real"] or {}
     local needsRoll = IsTableEmpty(sr) and IsTableEmpty(ms) and IsTableEmpty(ofs)
     if announceWinners and needsRoll then
       for bidder,r in roll do
@@ -404,7 +413,7 @@ local function BidSummary(announceWinners)
           local bid = ms[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
           elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(bid, real[bidder]) .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -418,7 +427,7 @@ local function BidSummary(announceWinners)
           local bid = ofs[bidder]
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
           elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(bid, real[bidder]) .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -473,7 +482,12 @@ local function BidSummary(announceWinners)
     elseif announceWinners then
       local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item
       if sessionMode == "DKP" then
-        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of ")) .. winnerBid
+        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of "))
+        if getn(winner) == 1 then
+          winnerMessage = winnerMessage .. realAmt(winnerBid, real[winner[1]])
+        else
+          winnerMessage = winnerMessage .. winnerBid
+        end
       else
         winnerMessage = winnerMessage .. " for " .. string.upper(winnerTier)
       end
@@ -547,20 +561,19 @@ function ChatLootBidder:Start(items, timer, mode)
     local srsOnItem = GetKeysWhere(srs, function(player, playerSrs) return IsInRaid(player) and TableContains(playerSrs, itemName) end)
     local srLen = TableLength(srsOnItem)
     session[i] = {}
+    session[i]["cancel"] = {}
+    session[i]["roll"] = {}
+    session[i]["real"] = {}
     if srLen == 0 then
       exampleItem = i
       table.insert(startChannelMessage, i)
       bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
       session[i]["ms"] = {}
       session[i]["os"] = {}
-      session[i]["roll"] = {}
-      session[i]["cancel"] = {}
       session[i]["notes"] = {}
     else
       table.insert(startChannelMessage, i .. " SR (" .. srLen .. ")")
       session[i]["sr"] = {}
-      session[i]["cancel"] = {}
-      session[i]["roll"] = {}
       for _,sr in pairs(srsOnItem) do
         session[i]["sr"][sr] = 1
         session[i]["roll"][sr] = -1
@@ -891,8 +904,11 @@ local function InvalidBidSyntax(item)
   return "Invalid bid syntax for " .. item .. ".  The proper format is: '[item-link] ms" .. (sessionMode == "DKP" and bidExample or "") .. "' or '[item-link] os" .. (sessionMode == "DKP" and bidExample or "") .. "' or '[item-link] roll'"
 end
 
-local function of(amt)
-  return sessionMode == "DKP" and (" of " .. amt) or ""
+local function of(amt, real)
+  if sessionMode == "DKP" then
+    return " of " .. realAmt(amt, real)
+  end
+  return ""
 end
 
 local function HandleSrQuery(bidder)
@@ -1012,6 +1028,7 @@ function ChatFrame_OnEvent(event)
     local roll = itemSession["roll"]
     local cancel = itemSession["cancel"]
     local notes = itemSession["notes"]
+    local real = itemSession["real"]
 
     local bid = SplitBySpace(string.sub(arg1, itemIndexEnd + 1))
     local tier = bid[1] and string.lower(bid[1]) or nil
@@ -1034,6 +1051,7 @@ function ChatFrame_OnEvent(event)
       mainSpec[bidder] = nil
       offSpec[bidder] = nil
       notes[bidder] = nil
+      real[bidder] = nil
       MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. cancelBid)
       SendResponse(cancelBid, bidder)
       return
@@ -1063,27 +1081,33 @@ function ChatFrame_OnEvent(event)
     -- remove tier from the table for note concat
     table.remove(bid, 1)
     local note = table.concat(bid, " ")
+    local alt = string.find(string.lower(note), "alt") ~= nil
+    real[bidder] = amt
+    if sessionMode == "DKP" and ChatLootBidder_Store.AltPenalty > 0 and alt then
+      Trace("Alt penalty is " .. ChatLootBidder_Store.AltPenalty .. "%")
+      amt = (amt * 100 - amt * ChatLootBidder_Store.AltPenalty) / 100
+    end
     notes[bidder] = note
     local received
     if tier == "ms" then
       mainSpec[bidder] = amt
       if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
-      received = "Main Spec bid" .. of(amt) .. " received for " .. item .. AppendNote(note)
+      received = "Main Spec bid" .. of(amt, real[bidder]) .. " received for " .. item .. AppendNote(note)
     elseif mainSpec[bidder] ~= nil then
-      SendResponse("You already have a MS bid" .. of(mainSpec[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
+      SendResponse("You already have a MS bid" .. of(mainSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
       return
     elseif tier == "os" then
       offSpec[bidder] = amt
       if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
-      received = "Off Spec bid" .. of(amt) .. " received for " .. item .. AppendNote(note)
+      received = "Off Spec bid" .. of(amt, real[bidder]) .. " received for " .. item .. AppendNote(note)
     elseif offSpec[bidder] ~= nil then
-      SendResponse("You already have an OS bid" .. of(offSpec[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
+      SendResponse("You already have an OS bid" .. of(offSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
       return
     elseif tier == "roll" then
       roll[bidder] = -1
       received = "Your roll bid for " .. item .. " has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
     end
-    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. amt)) .. " " .. item)
+    MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. realAmt(amt, real[bidder]))) .. " " .. item)
     SendResponse(received, bidder)
     return
   else
