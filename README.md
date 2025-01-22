@@ -79,6 +79,11 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * Looting a boss twice will load the items to the stage twice if a session was not started.
 
 # Changelog
+
+* 1.8
+  * Adding in "Alt Penalty" which is entirely optional for DKP mode.  This value will alter bids coming in if the "Note" starts with the letters `a` `l` `t` case-insensitive.
+    * `/loot debug 1` to see the value as you move the slider; showing the "value" on all of the sliders is a TODO enhancement
+    * `/loot debug 0` to turn off the spam
 * 1.7.5
   * Properly removing someone's SR when they win (when configured)
   * Fixing error when canceling a bid in SR mode
