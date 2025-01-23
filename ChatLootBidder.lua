@@ -483,7 +483,7 @@ local function BidSummary(announceWinners)
       local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item
       if sessionMode == "DKP" then
         winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of "))
-        if getn(winner) == 1 then
+        if getn(winner) == 1 and winnerTier ~= "roll" then
           winnerMessage = winnerMessage .. realAmt(winnerBid, real[winner[1]])
         else
           winnerMessage = winnerMessage .. winnerBid
