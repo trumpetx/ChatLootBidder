@@ -82,7 +82,7 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 * 1.8.1
   * Removing #(0) announces for rolls on alts
-* 1.8
+* 1.8.0
   * Adding in "Alt Penalty" which is entirely optional for DKP mode.  This value will alter bids coming in if the "Note" starts with the letters `a` `l` `t` case-insensitive.
     * `/loot debug 1` to see the value as you move the slider; showing the "value" on all of the sliders is a TODO enhancement
     * `/loot debug 0` to turn off the spam
@@ -106,7 +106,7 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 * 1.6.3
   * Added Soft Reserve name validation (Requires AtlasLoot [1.12.1](https://legacy-wow.com/vanilla-addons/atlasloot-enhanced/), [Turtle](https://turtle-wow.fandom.com/wiki/AtlasLoot))
 * 1.6.1-2
-  * Soft Reserve Bug Fixess
+  * Soft Reserve Bug Fixes
 * 1.6.0
   * Changed MSOS mode to be the default after a fresh install
   * Added Soft Reserve functionality to MSOS mode
