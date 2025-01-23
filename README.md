@@ -80,6 +80,8 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.8.1
+  * Removing #(0) announces for rolls on alts
 * 1.8
   * Adding in "Alt Penalty" which is entirely optional for DKP mode.  This value will alter bids coming in if the "Note" starts with the letters `a` `l` `t` case-insensitive.
     * `/loot debug 1` to see the value as you move the slider; showing the "value" on all of the sliders is a TODO enhancement
