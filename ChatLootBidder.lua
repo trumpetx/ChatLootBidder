@@ -54,6 +54,7 @@ local function LoadVariables()
   ChatLootBidder_Store.MaxBid = ChatLootBidder_Store.MaxBid or 5000
   ChatLootBidder_Store.MinBid = ChatLootBidder_Store.MinBid or 1
   ChatLootBidder_Store.AltPenalty = ChatLootBidder_Store.AltPenalty or 0
+  ChatLootBidder_Store.OffspecPenalty = ChatLootBidder_Store.OffspecPenalty or 0
   ChatLootBidder_Store.MinRarity = ChatLootBidder_Store.MinRarity or 4
   ChatLootBidder_Store.MaxRarity = ChatLootBidder_Store.MaxRarity or 5
   ChatLootBidder_Store.DefaultSessionMode = ChatLootBidder_Store.DefaultSessionMode or "MSOS" -- DKP | MSOS
@@ -411,9 +412,14 @@ local function BidSummary(announceWinners)
           if IsTableEmpty(winner) then table.insert(summary, item) end
           if header then table.insert(summary, "- Main Spec:"); header = false end
           local bid = ms[bidder]
+          local displayText = realAmt(bid, real[bidder])
+          -- If the bid is not from an offspec bid, add it to the summary
+          if not (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os") then
+            table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. displayText .. AppendNote(notes[bidder]))
+          end
+          -- Always include in winner determination, regardless of origin
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
           elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(bid, real[bidder]) .. AppendNote(notes[bidder]))
         end
       end
     end
@@ -421,7 +427,7 @@ local function BidSummary(announceWinners)
     if not IsTableEmpty(ofs) then
       local sortedOffspecKeys = GetKeysSortedByValue(ofs)
       for k,bidder in pairs(sortedOffspecKeys) do
-        if cancel[bidder] == nil and ms[bidder] == nil then
+        if cancel[bidder] == nil and (ms[bidder] == nil or (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os")) then
           if IsTableEmpty(winner) then table.insert(summary, item) end
           if header then table.insert(summary, "- Off Spec:"); header = false end
           local bid = ofs[bidder]
@@ -482,11 +488,32 @@ local function BidSummary(announceWinners)
     elseif announceWinners then
       local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item
       if sessionMode == "DKP" then
-        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(winnerTier) .. " bid of "))
+        local displayTier = winnerTier
+        local displayBidAmount = winnerBid
+
+        -- Check if winner came from offspec bid
+        local winnerFromOffspec = winnerTier == "ms" and itemSession["ms_origin"] and itemSession["ms_origin"][winner[1]] == "os"
+
+        -- Check if there were any natural mainspec bids competing
+        local hasNaturalMainspecBids = false
+        for bidder, bid in pairs(ms) do
+          if cancel[bidder] == nil and not (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os") then
+            hasNaturalMainspecBids = true
+            break
+          end
+        end
+
+        -- If winner came from offspec and no natural mainspec bids competed, display as offspec with original amount
+        if winnerFromOffspec and not hasNaturalMainspecBids then
+          displayTier = "os"
+          displayBidAmount = ofs[winner[1]] -- Use original offspec bid amount
+        end
+
+        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(displayTier) .. " bid of "))
         if getn(winner) == 1 and winnerTier ~= "roll" then
-          winnerMessage = winnerMessage .. realAmt(winnerBid, real[winner[1]])
+          winnerMessage = winnerMessage .. realAmt(displayBidAmount, real[winner[1]])
         else
-          winnerMessage = winnerMessage .. winnerBid
+          winnerMessage = winnerMessage .. displayBidAmount
         end
       else
         winnerMessage = winnerMessage .. " for " .. string.upper(winnerTier)
@@ -1090,19 +1117,46 @@ function ChatFrame_OnEvent(event)
     notes[bidder] = note
     local received
     if tier == "ms" then
-      mainSpec[bidder] = amt
+      -- Allow a real MS bid to overwrite an auto-generated one from OS
+      if itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os" then
+        -- Overwrite the auto-generated MS bid
+        mainSpec[bidder] = amt
+        itemSession["ms_origin"][bidder] = nil
+      elseif mainSpec[bidder] ~= nil then
+        SendResponse("You already have a MS bid" .. of(mainSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
+        return
+      else
+        mainSpec[bidder] = amt
+      end
       if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
       received = "Main Spec bid" .. of(amt, real[bidder]) .. " received for " .. item .. AppendNote(note)
-    elseif mainSpec[bidder] ~= nil then
-      SendResponse("You already have a MS bid" .. of(mainSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
-      return
     elseif tier == "os" then
+      -- Check for existing offspec bid first
+      if offSpec[bidder] ~= nil then
+        SendResponse("You already have an OS bid" .. of(offSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current OS bid.", bidder)
+        return
+      end
+
+      -- Check for existing legitimate mainspec bid before recording offspec bid
+      if sessionMode == "DKP" and ChatLootBidder_Store.OffspecPenalty > 0 and mainSpec[bidder] ~= nil and (not itemSession["ms_origin"] or itemSession["ms_origin"][bidder] ~= "os") then
+        SendResponse("You already have a MS bid" .. of(mainSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid before placing an OS bid.", bidder)
+        return
+      end
+
+      -- Now record the offspec bid
       offSpec[bidder] = amt
       if sessionMode == "MSOS" then roll[bidder] = roll[bidder] or -1 end
       received = "Off Spec bid" .. of(amt, real[bidder]) .. " received for " .. item .. AppendNote(note)
-    elseif offSpec[bidder] ~= nil then
-      SendResponse("You already have an OS bid" .. of(offSpec[bidder], real[bidder]) .. " recorded. Use '[item-link] cancel' to cancel your current MS bid.", bidder)
-      return
+
+      -- Handle offspec penalty after successful bid recording
+      if sessionMode == "DKP" and ChatLootBidder_Store.OffspecPenalty > 0 then
+        Trace("Offspec penalty is " .. ChatLootBidder_Store.OffspecPenalty .. "%")
+        local ms_amt = (amt * 100 - amt * ChatLootBidder_Store.OffspecPenalty) / 100
+        mainSpec[bidder] = ms_amt
+        -- Track that this mainspec bid originated from an offspec bid
+        itemSession["ms_origin"] = itemSession["ms_origin"] or {}
+        itemSession["ms_origin"][bidder] = "os"
+      end
     elseif tier == "roll" then
       roll[bidder] = -1
       received = "Your roll bid for " .. item .. " has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
