@@ -80,6 +80,9 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.9.1
+  * Always calculate a roll for someone (no more -1's in the logs)
+  * Do not announce rolls if there was only 1 roller (the winner bid will display it)
 * 1.9.0
   * Adding an "Offspec Penalty" feature which only works for DKP mode.  This penalty will "upgrade" an OS bid (at the penalty %) to compete with MS bids.  For example, setting this value to 50% would mean that an OS bid of "10" would be the same as a MS bid of "5".  The addon handles all of the math and will display the calculated bid along with the actual bid like `5(10)`.  If the "Alt Penalty" is also in effect, the penalty is considered multiplicative.  So an alt OS bid would compete with a MS bid after accounting for both of those penalties.
 * 1.8.1
