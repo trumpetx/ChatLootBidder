@@ -375,15 +375,17 @@ local function BidSummary(announceWinners)
     local notes = itemSession["notes"] or {}
     local real = itemSession["real"] or {}
     local needsRoll = IsTableEmpty(sr) and IsTableEmpty(ms) and IsTableEmpty(ofs)
-    if announceWinners and needsRoll then
-      for bidder,r in roll do
+    if announceWinners then
+      for bidder,r in pairs(roll) do
         if r == -1 then
           r = Roll()
           roll[bidder] = r
-          if ChatLootBidder_Store.RollAnnounce then
-            MessageStartChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
-          else
-            SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
+          if getn(roll) > 1 and needsRoll then
+            if ChatLootBidder_Store.RollAnnounce then
+              MessageStartChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
+            else
+              SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
+            end
           end
         end
       end
