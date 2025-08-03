@@ -6,10 +6,6 @@ local endSessionButton = getglobal(ChatLootBidder:GetName() .. "EndSession")
 local clearSessionButton = getglobal(ChatLootBidder:GetName() .. "ClearSession")
 
 local gfind = string.gmatch or string.gfind
-math.randomseed(time() * 100000000000)
-for i=1,3 do
-  math.random(10000, 65000)
-end
 
 local function Roll()
   return math.random(1, 100)
@@ -256,11 +252,11 @@ end
 
 local function SendToChatChannel(channel, message, prio)
   if IsStaticChannel(channel) then
-    ChatThrottleLib:SendChatMessage(prio or "NORMAL", shortName, message, channel)
+    ChatThrottleLib:SendChatMessage(prio or "NORMAL", addonName, message, channel)
   else
     local channelIndex = GetChannelName(channel)
     if channelIndex > 0 then
-      ChatThrottleLib:SendChatMessage(prio or "NORMAL", shortName, message, "CHANNEL", nil, channelIndex)
+      ChatThrottleLib:SendChatMessage(prio or "NORMAL", addonName, message, "CHANNEL", nil, channelIndex)
     else
       Error(channel .. " <Not In Channel> " .. message)
     end
@@ -303,7 +299,7 @@ local function SendResponse(message, bidder)
   if bidder == me then
     Message(message)
   else
-    ChatThrottleLib:SendChatMessage("ALERT", shortName, message, "WHISPER", nil, bidder)
+    ChatThrottleLib:SendChatMessage("ALERT", addonName, message, "WHISPER", nil, bidder)
   end
 end
 
