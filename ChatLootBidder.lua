@@ -1251,13 +1251,15 @@ function ChatLootBidderFrame.CHAT_MSG_SYSTEM(msg)
 	end
 end
 
-function ChatLootBidderFrame.ADDON_LOADED()
-  LoadVariables()
-  InitSlashCommands()
-  -- Load Options.xml values
-  LoadText()
-  LoadValues()
-  this:UnregisterEvent("ADDON_LOADED")
+function ChatLootBidderFrame.ADDON_LOADED(loadedAddonName)
+  if loadedAddonName == addonName then
+    LoadVariables()
+    InitSlashCommands()
+    -- Load Options.xml values
+    LoadText()
+    LoadValues()
+    this:UnregisterEvent("ADDON_LOADED")
+  end
 end
 
 function ChatLootBidderFrame.CHAT_MSG_ADDON(addonTag, stringMessage, channel, sender)
