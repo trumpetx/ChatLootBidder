@@ -364,7 +364,7 @@ local function BidSummary(announceWinners)
     local sr = itemSession["sr"] or {}
     local ms = itemSession["ms"] or {}
     local ofs = itemSession["os"] or {}
-    local roll = itemSession["roll"]
+    local roll = itemSession["roll"] or {}
     local cancel = itemSession["cancel"] or {}
     local notes = itemSession["notes"] or {}
     local real = itemSession["real"] or {}
@@ -374,12 +374,9 @@ local function BidSummary(announceWinners)
         if r == -1 then
           r = Roll()
           roll[bidder] = r
-          if getn(roll) > 1 and needsRoll then
-            if ChatLootBidder_Store.RollAnnounce then
-              MessageStartChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
-            else
-              SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
-            end
+          -- Individually inform users of their roll so that if they lose with no announcement, they understand why
+          if getn(roll) > 1 and needsRoll and not ChatLootBidder_Store.RollAnnounce then
+            SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
           end
         end
       end
@@ -436,6 +433,7 @@ local function BidSummary(announceWinners)
     header = true
     if not IsTableEmpty(roll) then
       local sortedRollKeys = GetKeysSortedByValue(roll)
+      local annouceRollString = ""
       for k,bidder in pairs(sortedRollKeys) do
         if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil then
           if IsTableEmpty(winner) then table.insert(summary, item) end
@@ -444,7 +442,18 @@ local function BidSummary(announceWinners)
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
           elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
           table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
+          if string.len(annouceRollString) > 200 then
+            MessageStartChannel(annouceRollString)
+            annouceRollString = PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+          elseif string.len(annouceRollString) == 0 then
+            annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+          else
+            annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+          end
         end
+      end
+      if getn(sortedRollKeys) > 1 and string.len(annouceRollString) > 0 then
+        MessageStartChannel(annouceRollString)
       end
     end
     local breakTies = ChatLootBidder_Store.BreakTies or sessionMode ~= "DKP"
@@ -825,6 +834,10 @@ local InitSlashCommands = function()
       else
         ChatLootBidderOptionsFrame:Show()
       end
+    -- elseif commandlist[1] == "test" then
+    --   arg1 = table.concat(commandlist, " ", 2)
+    --   arg2 = commandlist[2]
+    --   ChatFrame_OnEvent("CHAT_MSG_WHISPER")
     elseif commandlist[1] == "help" or commandlist[1] == "info" then
 			ShowHelp()
     elseif commandlist[1] == "sr" then
