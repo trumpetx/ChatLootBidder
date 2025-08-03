@@ -1,9 +1,7 @@
-local ChatLootBidder = ChatLootBidderFrame
---if ChatLootBidder == nil then print("XML Error"); return end
 local T = ChatLootBidder_i18n
-local startSessionButton = getglobal(ChatLootBidder:GetName() .. "StartSession")
-local endSessionButton = getglobal(ChatLootBidder:GetName() .. "EndSession")
-local clearSessionButton = getglobal(ChatLootBidder:GetName() .. "ClearSession")
+local startSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "StartSession")
+local endSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "EndSession")
+local clearSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "ClearSession")
 
 local gfind = string.gmatch or string.gfind
 
@@ -96,7 +94,7 @@ local function Trace(message)
 	end
 end
 
-function ChatLootBidder:SetPropValue(propName, propValue, prefix)
+function ChatLootBidderFrame:SetPropValue(propName, propValue, prefix)
   if prefix then
     propName = string.sub(propName, strlen(prefix)+1)
   end
@@ -110,7 +108,7 @@ function ChatLootBidder:SetPropValue(propName, propValue, prefix)
 
     -- Special Handlers for specific properties here
     if propName == "DefaultSessionMode" then
-      ChatLootBidder:RedrawStage()
+      ChatLootBidderFrame:RedrawStage()
     end
 
   else
@@ -326,7 +324,7 @@ local function Srs(n)
   return ChatLootBidder_Store.SoftReserveSessions[n];
 end
 
-function ChatLootBidder:LoadedSoftReserveSession()
+function ChatLootBidderFrame:LoadedSoftReserveSession()
   if softReserveSessionName then
     return unpack({softReserveSessionName, ChatLootBidder_Store.SoftReserveSessions[softReserveSessionName]})
   end
@@ -530,14 +528,14 @@ local function BidSummary(announceWinners)
   end
 end
 
-function ChatLootBidder:End()
+function ChatLootBidderFrame:End()
   ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", "endSession=1", "RAID")
   BidSummary(true)
   session = nil
   sessionMode = nil
   stage = nil
   endSessionButton:Hide()
-  ChatLootBidder:Hide()
+  ChatLootBidderFrame:Hide()
 end
 
 local function GetItemLinks(str)
@@ -553,11 +551,11 @@ local function GetItemLinks(str)
   end
 end
 
-function ChatLootBidder:Start(items, timer, mode)
+function ChatLootBidderFrame:Start(items, timer, mode)
   if not IsRaidAssistant(me) then Error("You must be a raid leader or assistant in a raid to start a loot session"); return end
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
   local mode = mode ~= nil and mode or ChatLootBidder_Store.DefaultSessionMode
-  if session ~= nil then ChatLootBidder:End() end
+  if session ~= nil then ChatLootBidderFrame:End() end
   local stageList = GetKeysWhere(stage, function(k,v) return v == true end)
   if items == nil then
     items = stageList
@@ -567,7 +565,7 @@ function ChatLootBidder:Start(items, timer, mode)
     end
   end
   if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
-  ChatLootBidder:EndSessionButtonShown()
+  ChatLootBidderFrame:EndSessionButtonShown()
   session = {}
   sessionMode = mode
   stage = nil
@@ -622,18 +620,18 @@ function ChatLootBidder:Start(items, timer, mode)
     ChatThrottleLib:SendAddonMessage("BULK", "NotChatLootBidder", bidAddonMessage, "RAID")
   else
     -- Everything was SR'd - just end now
-    ChatLootBidder:End()
+    ChatLootBidderFrame:End()
   end
 end
 
-function ChatLootBidder:Clear(stageOnly)
+function ChatLootBidderFrame:Clear(stageOnly)
   if session == nil or stageOnly then
     if IsTableEmpty(stage) then
       Message("There is no active session or stage")
     else
       stage = nil
       Message("Cleared the stage")
-      ChatLootBidder:RedrawStage()
+      ChatLootBidderFrame:RedrawStage()
     end
   else
     session = nil
@@ -641,12 +639,12 @@ function ChatLootBidder:Clear(stageOnly)
   end
 end
 
-function ChatLootBidder:Unstage(item, redraw)
+function ChatLootBidderFrame:Unstage(item, redraw)
   stage[item] = false
-  if redraw then ChatLootBidder:RedrawStage() end
+  if redraw then ChatLootBidderFrame:RedrawStage() end
 end
 
-function ChatLootBidder:HandleSrDelete(providedName)
+function ChatLootBidderFrame:HandleSrDelete(providedName)
   if softReserveSessionName == nil and providedName == nil then
     Error("No Soft Reserve session loaded or provided for deletion")
   elseif providedName == nil then
@@ -668,7 +666,7 @@ local function craftName(appender)
   return date("%y-%m-%d") .. (appender == 0 and "" or ("-"..appender))
 end
 
-function ChatLootBidder:HandleSrAddDefault()
+function ChatLootBidderFrame:HandleSrAddDefault()
   local appender = 0
   while ChatLootBidder_Store.SoftReserveSessions[craftName(appender)] ~= nil do
     appender = appender + 1
@@ -680,7 +678,7 @@ function ChatLootBidder:HandleSrAddDefault()
   ChatLootBidderOptionsFrame_Init(softReserveSessionName)
 end
 
-function ChatLootBidder:HandleSrLoad(providedName)
+function ChatLootBidderFrame:HandleSrLoad(providedName)
   if providedName then
     softReserveSessionName = providedName
     local srs = Srs()
@@ -689,11 +687,11 @@ function ChatLootBidder:HandleSrLoad(providedName)
     SrEditFrame:Hide()
     ChatLootBidderOptionsFrame_Init(softReserveSessionName)
   else
-    ChatLootBidder:HandleSrAddDefault()
+    ChatLootBidderFrame:HandleSrAddDefault()
   end
 end
 
-function ChatLootBidder:HandleSrUnload()
+function ChatLootBidderFrame:HandleSrUnload()
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
@@ -704,13 +702,13 @@ function ChatLootBidder:HandleSrUnload()
   SrEditFrame:Hide()
 end
 
-function ChatLootBidder:HandleSrInstructions()
+function ChatLootBidderFrame:HandleSrInstructions()
   MessageStartChannel("Set your SR: /w " .. PlayerWithClassColor(me) .. " sr [item-link or exact-item-name]")
   MessageStartChannel("Get your current SR: /w " .. PlayerWithClassColor(me) .. " sr")
   MessageStartChannel("Clear your current SR: /w " .. PlayerWithClassColor(me) .. " sr clear")
 end
 
-function ChatLootBidder:HandleSrShow()
+function ChatLootBidderFrame:HandleSrShow()
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
@@ -776,7 +774,7 @@ local function HandleChannel(prop, channel)
   getglobal("ChatLootBidderOptionsFrame" .. prop):SetValue(channel)
 end
 
-function ChatLootBidder:HandleEncoding(encodingType)
+function ChatLootBidderFrame:HandleEncoding(encodingType)
   if softReserveSessionName == nil then
     Error("No Soft Reserve list is loaded")
   else
@@ -800,7 +798,7 @@ function ChatLootBidder:HandleEncoding(encodingType)
   end
 end
 
-function ChatLootBidder:ToggleSrLock(command)
+function ChatLootBidderFrame:ToggleSrLock(command)
   if softReserveSessionName == nil then
     Error("No Soft Reserve session loaded")
   else
@@ -813,7 +811,7 @@ function ChatLootBidder:ToggleSrLock(command)
   end
 end
 
-function ChatLootBidder:IsLocked()
+function ChatLootBidderFrame:IsLocked()
   return softReservesLocked
 end
 
@@ -836,19 +834,19 @@ local InitSlashCommands = function()
       end
       local subcommand = commandlist[2]
       if commandlist[2] == "load" then
-        ChatLootBidder:HandleSrLoad(commandlist[3])
+        ChatLootBidderFrame:HandleSrLoad(commandlist[3])
       elseif commandlist[2] == "unload" then
         HandleSrUnload()
       elseif commandlist[2] == "delete" then
-        ChatLootBidder:HandleSrDelete(commandlist[3])
+        ChatLootBidderFrame:HandleSrDelete(commandlist[3])
       elseif commandlist[2] == "show" then
-        ChatLootBidder:HandleSrShow()
+        ChatLootBidderFrame:HandleSrShow()
       elseif commandlist[2] == "csv" or commandlist[2] == "json" or commandlist[2] == "semicolon" or commandlist[2] == "raidresfly" then
-        ChatLootBidder:HandleEncoding(commandlist[2])
+        ChatLootBidderFrame:HandleEncoding(commandlist[2])
       elseif commandlist[2] == "lock" or commandlist[2] == "unlock" then
-        ChatLootBidder:ToggleSrLock(commandlist[2])
+        ChatLootBidderFrame:ToggleSrLock(commandlist[2])
       elseif commandlist[2] == "instructions" then
-        ChatLootBidder:HandleSrInstructions()
+        ChatLootBidderFrame:HandleSrInstructions()
       else
         Error("Unknown 'sr' subcommand: " .. (commandlist[2] == nil and "nil" or commandlist[2]))
         Error("Valid values are: load, unload, delete, show, lock, unlock, json, semicolon, raidresfly, csv, instructions")
@@ -863,32 +861,32 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "win" and commandlist[2] then
       HandleChannel("WinnerAnnounceChannel", commandlist[2])
     elseif commandlist[1] == "end" then
-      ChatLootBidder:End()
+      ChatLootBidderFrame:End()
     elseif commandlist[1] == "clear" then
       if commandlist[2] == nil then
-        ChatLootBidder:Clear()
+        ChatLootBidderFrame:Clear()
       elseif stage == nil then
         Error("The stage is empty")
       else
         local itemLinks = GetItemLinks(message)
         for _, item in pairs(itemLinks) do
-          ChatLootBidder:Unstage(item)
+          ChatLootBidderFrame:Unstage(item)
         end
       end
-      ChatLootBidder:RedrawStage()
+      ChatLootBidderFrame:RedrawStage()
     elseif commandlist[1] == "stage" then
       local itemLinks = GetItemLinks(message)
       for _, item in pairs(itemLinks) do
         local item = item
-        ChatLootBidder:Stage(item, true)
+        ChatLootBidderFrame:Stage(item, true)
       end
-      ChatLootBidder:RedrawStage()
+      ChatLootBidderFrame:RedrawStage()
     elseif commandlist[1] == "summary" then
       BidSummary()
     elseif commandlist[1] == "start" then
       local itemLinks = GetItemLinks(message)
       local optionalTimer = ToWholeNumber(commandlist[getn(commandlist)], -1)
-      ChatLootBidder:Start(itemLinks, optionalTimer)
+      ChatLootBidderFrame:Start(itemLinks, optionalTimer)
 		end
   end
 end
@@ -1167,37 +1165,37 @@ function ChatFrame_OnEvent(event)
   end
 end
 
-function ChatLootBidder:StartSessionButtonShown()
-  ChatLootBidder:Show()
+function ChatLootBidderFrame:StartSessionButtonShown()
+  ChatLootBidderFrame:Show()
   startSessionButton:Show()
   clearSessionButton:Show()
 end
 
-function ChatLootBidder:EndSessionButtonShown()
-  ChatLootBidder:Show()
+function ChatLootBidderFrame:EndSessionButtonShown()
+  ChatLootBidderFrame:Show()
   startSessionButton:Hide()
   clearSessionButton:Hide()
   endSessionButton:Show()
-  ChatLootBidder:SetHeight(50)
+  ChatLootBidderFrame:SetHeight(50)
   for i = 1, 8 do
-    local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
-    local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+    local stageItem = getglobal(ChatLootBidderFrame:GetName() .. "Item"..i)
+    local unstageButton = getglobal(ChatLootBidderFrame:GetName() .. "UnstageButton"..i)
     unstageButton:Hide()
     stageItem:SetText("")
     stageItem:Hide()
   end
 end
 
-function ChatLootBidder:RedrawStage()
+function ChatLootBidderFrame:RedrawStage()
   local i=1, k, show
   for k, show in pairs(stage or {}) do
     if show then
       if i == 9 then Error("You may only stage up to 8 items.  Use /loot clear [itm] to clear specific items or /clear to wipe it clean."); return end
-      if not ChatLootBidder:IsVisible() then
-        ChatLootBidder:StartSessionButtonShown()
+      if not ChatLootBidderFrame:IsVisible() then
+        ChatLootBidderFrame:StartSessionButtonShown()
       end
-      local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
-      local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+      local stageItem = getglobal(ChatLootBidderFrame:GetName() .. "Item"..i)
+      local unstageButton = getglobal(ChatLootBidderFrame:GetName() .. "UnstageButton"..i)
       unstageButton:Show()
       stageItem:SetText(k)
       stageItem:Show()
@@ -1205,28 +1203,28 @@ function ChatLootBidder:RedrawStage()
     end
   end
   if i == 1 then -- if none shown
-    ChatLootBidder:Hide()
+    ChatLootBidderFrame:Hide()
   else
-    ChatLootBidder:SetHeight(240-(160-i*20))
+    ChatLootBidderFrame:SetHeight(240-(160-i*20))
     for i = i, 8 do
-      local stageItem = getglobal(ChatLootBidder:GetName() .. "Item"..i)
-      local unstageButton = getglobal(ChatLootBidder:GetName() .. "UnstageButton"..i)
+      local stageItem = getglobal(ChatLootBidderFrame:GetName() .. "Item"..i)
+      local unstageButton = getglobal(ChatLootBidderFrame:GetName() .. "UnstageButton"..i)
       unstageButton:Hide()
       stageItem:SetText("")
       stageItem:Hide()
     end
   end
-  getglobal(ChatLootBidder:GetName() .. "HeaderString"):SetText(ChatLootBidder_Store.DefaultSessionMode .. " Mode")
+  getglobal(ChatLootBidderFrame:GetName() .. "HeaderString"):SetText(ChatLootBidder_Store.DefaultSessionMode .. " Mode")
 end
 
-function ChatLootBidder:Stage(i, force)
+function ChatLootBidderFrame:Stage(i, force)
   stage = stage or {}
   if force or stage[i] == nil then
     stage[i] = true
   end
 end
 
-function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
+function ChatLootBidderFrame.CHAT_MSG_SYSTEM(msg)
   if session == nil then return end
   local _, _, name, roll, low, high = string.find(msg, rollRegex)
 	if name then
@@ -1253,7 +1251,7 @@ function ChatLootBidder.CHAT_MSG_SYSTEM(msg)
 	end
 end
 
-function ChatLootBidder.ADDON_LOADED()
+function ChatLootBidderFrame.ADDON_LOADED()
   LoadVariables()
   InitSlashCommands()
   -- Load Options.xml values
@@ -1262,29 +1260,29 @@ function ChatLootBidder.ADDON_LOADED()
   this:UnregisterEvent("ADDON_LOADED")
 end
 
-function ChatLootBidder.CHAT_MSG_ADDON(addonTag, stringMessage, channel, sender)
+function ChatLootBidderFrame.CHAT_MSG_ADDON(addonTag, stringMessage, channel, sender)
   if VersionUtil:CHAT_MSG_ADDON(addonName, function(ver)
     Message("New version " .. ver .. " of " .. addonTitle .. " is available! Upgrade now at " .. addonNotes)
   end) then return end
 end
 
-function ChatLootBidder.PARTY_MEMBERS_CHANGED()
+function ChatLootBidderFrame.PARTY_MEMBERS_CHANGED()
   VersionUtil:PARTY_MEMBERS_CHANGED(addonName)
 end
 
-function ChatLootBidder.PLAYER_ENTERING_WORLD()
+function ChatLootBidderFrame.PLAYER_ENTERING_WORLD()
   VersionUtil:PLAYER_ENTERING_WORLD(addonName)
   if ChatLootBidder_Store.Point and getn(ChatLootBidder_Store.Point) == 4 then
-    ChatLootBidder:SetPoint(ChatLootBidder_Store.Point[1], "UIParent", ChatLootBidder_Store.Point[2], ChatLootBidder_Store.Point[3], ChatLootBidder_Store.Point[4])
+    ChatLootBidderFrame:SetPoint(ChatLootBidder_Store.Point[1], "UIParent", ChatLootBidder_Store.Point[2], ChatLootBidder_Store.Point[3], ChatLootBidder_Store.Point[4])
   end
 end
 
-function ChatLootBidder.PLAYER_LEAVING_WORLD()
-  local point, _, relativePoint, xOfs, yOfs = ChatLootBidder:GetPoint()
+function ChatLootBidderFrame.PLAYER_LEAVING_WORLD()
+  local point, _, relativePoint, xOfs, yOfs = ChatLootBidderFrame:GetPoint()
   ChatLootBidder_Store.Point = {point, relativePoint, xOfs, yOfs}
 end
 
-function ChatLootBidder.LOOT_OPENED()
+function ChatLootBidderFrame.LOOT_OPENED()
   if session ~= nil then return end
   if not ChatLootBidder_Store.AutoStage then return end
   if not IsMasterLooterSet() or not IsRaidAssistant(me) then return end
@@ -1293,10 +1291,10 @@ function ChatLootBidder.LOOT_OPENED()
     local lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive = GetLootSlotInfo(i)
     -- print(lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive)
     if rarity >= ChatLootBidder_Store.MinRarity and rarity <= ChatLootBidder_Store.MaxRarity then
-      ChatLootBidder:Stage(GetLootSlotLink(i))
+      ChatLootBidderFrame:Stage(GetLootSlotLink(i))
     end
   end
-  ChatLootBidder:RedrawStage()
+  ChatLootBidderFrame:RedrawStage()
 end
 
 
@@ -1351,7 +1349,7 @@ function ValidateFixAndWarn(t)
   end
 end
 
-function ChatLootBidder:DecodeAndSave(text, parent)
+function ChatLootBidderFrame:DecodeAndSave(text, parent)
   local encoding = SrEditFrameHeaderString:GetText()
   local t
   if encoding == "json" then
@@ -1374,7 +1372,7 @@ end
 
 --
 -- Taken from https://github.com/laytya/WowLuaVanilla which took it from SuperMacro
-function ChatLootBidder:OnVerticalScroll(scrollFrame)
+function ChatLootBidderFrame:OnVerticalScroll(scrollFrame)
 	local offset = scrollFrame:GetVerticalScroll();
 	local scrollbar = getglobal(scrollFrame:GetName().."ScrollBar");
 
