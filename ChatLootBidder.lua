@@ -456,7 +456,7 @@ local function BidSummary(announceWinners)
       end
       while getn(winner) > 1 and breakTies do
         local winningRoll = 0
-        for _,bidder in winner do
+        for _,bidder in pairs(winner) do
           local r = roll[bidder]
           if r == -1 or r == nil then
             r = Roll()
@@ -469,7 +469,7 @@ local function BidSummary(announceWinners)
           if winningRoll < r then winningRoll = r end
         end
         local newWinner = {}
-        for _,bidder in winner do
+        for _,bidder in pairs(winner) do
           if roll[bidder] == winningRoll then
             table.insert(newWinner, bidder)
           end
@@ -521,8 +521,8 @@ local function BidSummary(announceWinners)
       HandleSrRemove(winner[1], item)
     end
   end
-  for _,summary in summaries do
-    for _,line in summary do
+  for _,summary in pairs(summaries) do
+    for _,line in pairs(summary) do
       MessageBidSummaryChannel(line)
     end
   end
@@ -750,7 +750,7 @@ end
 local function EncodeRaidResFly()
   local encoded = ""
   local flat = Flatten(Srs())
-  for _,arr in flat do
+  for _,arr in pairs(flat) do
     -- [00:00]Autozhot: Autozhot - Band of Accuria
     encoded = (encoded or "") .. "[00:00]"..arr[1]..": "..arr[1].." - "..arr[2].."\n"
   end
@@ -952,8 +952,8 @@ end
 -- { 16925, "INV_Belt_22", "=q4=Belt of Transcendence", "=ds=#s10#, #a1# =q9=#c5#", "11%" }
 local function ValidateItemName(n)
   if not ChatLootBidder_Store.ItemValidation or not AtlasLootLoaded() then return unpack({-1, n, -1, "", ""}) end
-  for raidBossKey,raidBoss in AtlasLoot_Data["AtlasLootItems"] do
-    for _,dataSet in raidBoss do
+  for raidBossKey,raidBoss in pairs(AtlasLoot_Data["AtlasLootItems"]) do
+    for _,dataSet in pairs(raidBoss) do
       if dataSet then
         local itemNumber, icon, nameQuery, _, dropRate = unpack(dataSet)
         if nameQuery then
