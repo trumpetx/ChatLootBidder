@@ -3,6 +3,21 @@ local startSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "StartSess
 local endSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "EndSession")
 local clearSessionButton = getglobal(ChatLootBidderFrame:GetName() .. "ClearSession")
 
+-- Default class colors if not provided by another addon
+if not RAID_CLASS_COLORS then
+  RAID_CLASS_COLORS = {
+    ["WARRIOR"] = { r = 0.78, g = 0.61, b = 0.43, colorStr = "ffc79c6e" },
+    ["MAGE"]    = { r = 0.41, g = 0.8,  b = 0.94, colorStr = "ff69ccf0" },
+    ["ROGUE"]   = { r = 1,    g = 0.96, b = 0.41, colorStr = "fffff569" },
+    ["DRUID"]   = { r = 1,    g = 0.49, b = 0.04, colorStr = "ffff7d0a" },
+    ["HUNTER"]  = { r = 0.67, g = 0.83, b = 0.45, colorStr = "ffabd473" },
+    ["SHAMAN"]  = { r = 0.14, g = 0.35, b = 1.0,  colorStr = "ff0070de" },
+    ["PRIEST"]  = { r = 1,    g = 1,    b = 1,    colorStr = "ffffffff" },
+    ["WARLOCK"] = { r = 0.58, g = 0.51, b = 0.79, colorStr = "ff9482c9" },
+    ["PALADIN"] = { r = 0.96, g = 0.55, b = 0.73, colorStr = "fff58cba" },
+  }
+end
+
 local gfind = string.gmatch or string.gfind
 
 local function Roll()
@@ -57,6 +72,7 @@ local function LoadVariables()
   ChatLootBidder_Store.SoftReserveSessions = ChatLootBidder_Store.SoftReserveSessions or {}
   ChatLootBidder_Store.AutoRemoveSrAfterWin = DefaultTrue(ChatLootBidder_Store.AutoRemoveSrAfterWin)
   ChatLootBidder_Store.AutoLockSoftReserve = DefaultTrue(ChatLootBidder_Store.AutoLockSoftReserve)
+  ChatLootBidder_Store.ShowPlayerClassColors = DefaultTrue(ChatLootBidder_Store.ShowPlayerClassColors)
   -- TODO: Make this custom per Soft Reserve session and make this the default when a new list is started
   ChatLootBidder_Store.DefaultMaxSoftReserves = 1
 end
@@ -306,14 +322,24 @@ local function AppendNote(note)
 end
 
 local function PlayerWithClassColor(unit)
-  if RAID_CLASS_COLORS and pfUI then -- pfUI loads class colors
+  if ChatLootBidder_Store.ShowPlayerClassColors then
     local unitClass = GetPlayerClass(unit)
-    local colorStr = RAID_CLASS_COLORS[unitClass].colorStr
-    if colorStr and string.len(colorStr) == 8 then
-      return "\124c" .. colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
+    if unitClass and RAID_CLASS_COLORS[unitClass] then
+      local colorStr = RAID_CLASS_COLORS[unitClass].colorStr
+      if colorStr and string.len(colorStr) == 8 then
+        return "\124c" .. colorStr .. "\124Hplayer:" .. unit .. "\124h" .. unit .. "\124h\124r"
+      end
     end
   end
   return unit
+end
+
+local function PlayersWithClassColors(players)
+  local coloredPlayers = {}
+  for _, player in pairs(players) do
+    table.insert(coloredPlayers, PlayerWithClassColor(player))
+  end
+  return table.concat(coloredPlayers, ", ")
 end
 
 local function Srs(n)
@@ -459,9 +485,9 @@ local function BidSummary(announceWinners)
     local breakTies = ChatLootBidder_Store.BreakTies or sessionMode ~= "DKP"
     if getn(winner) > 1 then
       if sessionMode == "DKP" then
-        MessageWinnerChannel(table.concat(winner, ", ") .. " tied with a ".. string.upper(winnerTier) .. " bid of " .. winnerBid .. ", rolling it off:")
+        MessageWinnerChannel(PlayersWithClassColors(winner) .. " tied with a ".. string.upper(winnerTier) .. " bid of " .. winnerBid .. ", rolling it off:")
       else
-        MessageWinnerChannel(table.concat(winner, ", ") .. " bid ".. string.upper(winnerTier) ..", rolling it off:")
+        MessageWinnerChannel(PlayersWithClassColors(winner) .. " bid ".. string.upper(winnerTier) ..", rolling it off:")
       end
       while getn(winner) > 1 and breakTies do
         local winningRoll = 0
@@ -491,7 +517,7 @@ local function BidSummary(announceWinners)
       if announceWinners then MessageStartChannel("No bids received for " .. item) end
       table.insert(summary, item .. ": No Bids")
     elseif announceWinners then
-      local winnerMessage = table.concat(winner, ", ") .. (getn(winner) > 1 and " tie for " or " wins ") .. item
+      local winnerMessage = PlayersWithClassColors(winner) .. (getn(winner) > 1 and " tie for " or " wins ") .. item
       if sessionMode == "DKP" then
         local displayTier = winnerTier
         local displayBidAmount = winnerBid

@@ -21,7 +21,7 @@
   </Slider>
   <Frame name="ChatLootBidderOptionsFrame" hidden="true" toplevel="true" parent="UIParent" movable="true" enableMouse="true">
     <Size>
-      <AbsDimension x="420" y="600"/>
+      <AbsDimension x="420" y="620"/>
     </Size>
     <Anchors>
       <Anchor point="TOP">
@@ -109,6 +109,15 @@
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset>
                     <AbsDimension x="50" y="-215"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+            <FontString name="$parentShowPlayerClassColorsText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset>
+                    <AbsDimension x="50" y="-245"/>
                   </Offset>
                 </Anchor>
               </Anchors>
@@ -288,11 +297,20 @@
           </Anchor>
         </Anchors>
       </CheckButton>
+      <CheckButton name="$parentShowPlayerClassColors" inherits="MyOptionsCheckButtonTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="20" y="-235" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </CheckButton>
       <Slider name="$parentMinRarity" inherits="MyRaritySlider">
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="20" y="-255" />
+              <AbsDimension x="20" y="-285" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -301,7 +319,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="20" y="-305" />
+              <AbsDimension x="20" y="-335" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -310,7 +328,7 @@
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
-              <AbsDimension x="20" y="-355"/>
+              <AbsDimension x="20" y="-385"/>
             </Offset>
           </Anchor>
         </Anchors>
@@ -328,7 +346,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="0" y="-385"/>
+              <AbsDimension x="0" y="-415"/>
             </Offset>
           </Anchor>
         </Anchors>
@@ -342,7 +360,7 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="0" y="-415"/>
+              <AbsDimension x="0" y="-445"/>
             </Offset>
           </Anchor>
         </Anchors>
