@@ -331,7 +331,7 @@
     </Frames>
     <Scripts>
       <OnEvent>
-        this[event](arg1,arg2,arg3,arg4)
+        if this[event] then this[event](arg1,arg2,arg3,arg4) end
       </OnEvent>
       <OnLoad>
         this:RegisterEvent("ADDON_LOADED")
