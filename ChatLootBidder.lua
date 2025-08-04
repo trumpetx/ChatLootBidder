@@ -1051,13 +1051,14 @@ function ChatFrame_OnEvent(event)
 
   -- Handle SR Bids
   local commandlist = SplitBySpace(arg1)
-  if (softReserveSessionName ~= nil and string.lower(commandlist[1] or "") == "sr") then
+  local srCommand = string.lower(commandlist[1] or "") == "sr"
+  if srCommand and softReserveSessionName == nil then
+    SendResponse("There is no Soft Reserve session loaded", bidder)
+    return
+  end
+  if (srCommand) then
     if not IsInRaid(bidder) then
       SendResponse("You must be in the raid to place a Soft Reserve", bidder)
-      return
-    end
-    if softReserveSessionName == nil then
-      SendResponse("There is no Soft Reserve session loaded", bidder)
       return
     end
     -- If we're manually editing the SRs, treat it like being locked for incoming additions
