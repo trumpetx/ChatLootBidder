@@ -546,6 +546,8 @@ local function BidSummary(announceWinners)
         else
           winnerMessage = winnerMessage .. displayBidAmount
         end
+      elseif winnerTier == "roll" then
+        winnerMessage = winnerMessage .. " with a roll of " .. winnerBid
       else
         winnerMessage = winnerMessage .. " for " .. string.upper(winnerTier)
       end
