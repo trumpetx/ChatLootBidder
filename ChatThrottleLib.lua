@@ -31,7 +31,7 @@
 -- this limit.  Otherwise, this is the same as version 13 as it relates to throttling
 -- raw bytes sent.  To be clear, this update doesn't further throttle raw add-on messages.
 --
-local CTL_VERSION = 14.1
+local CTL_VERSION = 14.2
 
 local MAX_CPS = 800			  -- 2000 seems to be safe if NOTHING ELSE is happening. let's call it 800.
 local MSG_OVERHEAD = 40		-- Guesstimate overhead for sending a message; source+dest+chattype+protocolstuff
@@ -43,6 +43,8 @@ local MIN_FPS = 20				-- Reduce output CPS to half (and don't burst) if FPS drop
 -- Turtle seems to allow > 6 lines per second in some situations; but for pure spam throughput, a value of 6 here seems to be the limit.
 -- Due to timing issues, setting this to 5 seems to allow the most throughput without any accidental soft bans.
 local TURTLE_MAX_CHAT_LINES_PER_SECOND = 4
+
+local TURTLE_LINE_BUFFER = 10
 
 if(ChatThrottleLib and ChatThrottleLib.version>=CTL_VERSION) then
 	-- There's already a newer (or same) version loaded. Buh-bye.
@@ -299,11 +301,12 @@ end
 -- Despooling logic
 function ChatThrottleLib.TurtleSendChat(text, chattype, language, destination, prio, prefix, pipename)
 	self = ChatThrottleLib;
-  self.LastSent[5] = self.LastSent[4]
-  self.LastSent[4] = self.LastSent[3]
-  self.LastSent[3] = self.LastSent[2]
-  self.LastSent[2] = self.LastSent[1]
-  self.LastSent[1] = {text, chattype, language, destination, prio, prefix, pipename}
+  local idx = TURTLE_LINE_BUFFER
+  while idx > 1 do
+    self.LastSent[idx] = self.LastSent[idx - 1]
+    idx = idx - 1
+  end
+  self.LastSent[idx] = {text, chattype, language, destination, prio, prefix, pipename}
   self.TurtleChatLinesAvailable = self.TurtleChatLinesAvailable - 1
   -- Showing the frame will start to build back the available buffer and re-hide when max lines are available
   self.Frame:Show();
@@ -352,11 +355,11 @@ function ChatThrottleLib.OnEvent()
   elseif event == "UI_ERROR_MESSAGE" then
     for seconds in string.gfind(arg1, "You must wait ([0-9]+) Seconds. before speaking again.") do
       local lastSentIdx, lastSent = 1, self.LastSent[1]
-      while now < self.TurtleThrottle and lastSent == nil and lastSentIdx < 6 do
+      while now < self.TurtleThrottle and lastSent == nil and lastSentIdx <= TURTLE_LINE_BUFFER do
         lastSentIdx = lastSentIdx + 1
         lastSent = self.LastSent[lastSentIdx]
       end
-      if lastSentIdx == 6 then return end -- nothing left to requeue (unlikely)
+      if lastSentIdx > TURTLE_LINE_BUFFER then return end -- nothing left to requeue (unlikely)
       self.LastSent[lastSentIdx] = nil
 
       DEFAULT_CHAT_FRAME:AddMessage("|cffff0000 Turtle has throttled your chat.  Resuming when mute has ended.")
