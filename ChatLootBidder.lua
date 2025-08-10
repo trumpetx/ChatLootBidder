@@ -468,13 +468,15 @@ local function BidSummary(announceWinners)
           if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
           elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
           table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
-          if string.len(annouceRollString) > 200 then
-            MessageStartChannel(annouceRollString)
-            annouceRollString = PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
-          elseif string.len(annouceRollString) == 0 then
-            annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
-          else
-            annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+          if announceWinners and needsRoll and ChatLootBidder_Store.RollAnnounce then
+            if string.len(annouceRollString) > 200 then
+              MessageStartChannel(annouceRollString)
+              annouceRollString = PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+            elseif string.len(annouceRollString) == 0 then
+              annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+            else
+              annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+            end
           end
         end
       end
