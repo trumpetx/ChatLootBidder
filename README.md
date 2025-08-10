@@ -80,6 +80,15 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.10.0
+  * Refactored ChatThrottleLib to use configurable line buffer (increased from 5 to 10 lines)
+    * This should hopefully remove the `ChatThrottleLib.lua:147:attempt to index field 'list' (a nil value)` spam error
+    * More testing is necessary to figure out how and why this happens, but it may be a race condition related to multiple chat sends of different types (outputting many lines to /o /1 /ra /rw and getting chat banned)
+  * Fixed a bug where rolls were announced with MS/OS winners
+  * Changed the way rolls are announced, putting more than one roll (sorted high to low) on a single line to lower chat spam and turtle chat bans.  Similar to the change in 1.9.1, no roll is announced if there is a single roller (since it will be announced at win time).
+  * Added player class color support (configurable option in GUI) without requiring pfUI
+    * note: disabling this option will allow more rollers to appear on a single line due to 1.12.1 chat line length limits (coloring a player adds 25 hidden characters to a player's name with a total line limit of 255)
+  * Refactoring code to allow NotChatLootBidder to operate on 3.3.5a clients (.toc update notwithstanding)
 * 1.9.1
   * Always calculate a roll for someone (no more -1's in the logs)
   * Do not announce rolls if there was only 1 roller (the winner bid will display it)
