@@ -1164,6 +1164,9 @@ function ChatFrame_OnEvent(event)
     table.remove(bid, 1)
     local note = table.concat(bid, " ")
     local params = ExtractParams(note, {
+      ["heal"] = false, -- Is a healer
+      ["dps"] = false, -- Is a DPS
+      ["tank"] = false, -- Is a tank
       ["alt"] = false, -- Is an alternate character
       ["nr"] = false -- Do not reply with a bid confirmation
     })
