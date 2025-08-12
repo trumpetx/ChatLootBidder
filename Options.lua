@@ -4,6 +4,7 @@ function ChatLootBidderOptionsFrame_InitializeChannelDropdown(level, menulist)
     local widgetName = this:GetName()
     local propName = string.sub(widgetName, strlen(this:GetParent():GetName())+1)
     this.SetValue = function(self, value)
+      UIDropDownMenu_SetSelectedValue(self, value)
       getglobal(widgetName .. "Text"):SetText((ChatLootBidder_i18n[propName] or propName) .. ": " .. value)
       CloseDropDownMenus()
     end
