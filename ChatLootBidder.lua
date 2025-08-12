@@ -1036,6 +1036,21 @@ local function HandleSrAdd(bidder, itemName)
   ChatLootBidderOptionsFrame_Reload()
 end
 
+-- Extracts parameters from a message String. Parameters are words at the beginning of the note that indicate behavior.
+local function ExtractParams(message, params)
+  for _, word in pairs(SplitBySpace(string.lower(message))) do
+    if string.len(word) > 1 and string.sub(word, -1) == ";" then
+      word = string.sub(word, 1, -2)
+    end
+    if params[word] ~= nil then
+      params[word] = true
+    else
+      break
+    end
+  end
+  return params
+end
+
 function ChatFrame_OnEvent(event)
   -- Non-whispers are ignored; Don't react to duplicate whispers (multiple windows, usually)
   if event ~= "CHAT_MSG_WHISPER" or lastWhisper == (arg1 .. arg2) then
@@ -1148,9 +1163,12 @@ function ChatFrame_OnEvent(event)
     -- remove tier from the table for note concat
     table.remove(bid, 1)
     local note = table.concat(bid, " ")
-    local alt = string.find(string.lower(note), "alt") ~= nil
+    local params = ExtractParams(note, {
+      ["alt"] = false, -- Is an alternate character
+      ["nr"] = false -- Do not reply with a bid confirmation
+    })
     real[bidder] = amt
-    if sessionMode == "DKP" and ChatLootBidder_Store.AltPenalty > 0 and alt then
+    if sessionMode == "DKP" and ChatLootBidder_Store.AltPenalty > 0 and params.alt then
       Trace("Alt penalty is " .. ChatLootBidder_Store.AltPenalty .. "%")
       amt = (amt * 100 - amt * ChatLootBidder_Store.AltPenalty) / 100
     end
@@ -1202,7 +1220,9 @@ function ChatFrame_OnEvent(event)
       received = "Your roll bid for " .. item .. " has been received" .. AppendNote(note) .. ".  '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session."
     end
     MessageBidChannel("<" .. PlayerWithClassColor(bidder) .. "> " .. tier .. ((sessionMode == "MSOS" or amt == nil or tier == "roll") and "" or (" " .. realAmt(amt, real[bidder]))) .. " " .. item)
-    SendResponse(received, bidder)
+    if not params.nr then
+      SendResponse(received, bidder)
+    end
     return
   else
     ChatLootBidder_ChatFrame_OnEvent(event)

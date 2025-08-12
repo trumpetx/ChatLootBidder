@@ -49,6 +49,14 @@ Raiders bid after a session has been started:
   * If you choose not to roll yourself, the addon will do a `math.random(1, 100)` on your behalf.  The only reason to roll yourself is if you (A) don't trust the Master Looter or (B) believe that your dice are better than other dice.
   * SPECIAL CASE - ONE ITEM ONLY: You may simply `/random` to have your roll applied to that item without `/w Masterlooter roll` first (since it's unambiguous which item you're rolling on)
 
+**Note**: You can prepend the note with 'hints' to modify behavior, semicolons are optional:
+* `ALT;` - Marks the bid as coming from an alt character (applies alt penalty in DKP mode or simply informational to the Masterlooter)
+  * `/w Masterlooter [item-link] ms 100 alt; gimmeh!` ✅
+  * `/w Masterlooter [item-link] ms 100 gimmeh! alt;` ❌
+* `NR;` - No Reply flag - suppresses the confirmation message when your bid is received
+  * `/w Masterlooter [item-link] ms 100 nr; alt; bis!` ✅
+  * `/w Masterlooter [item-link] ms 100 alt nr bis!` ✅
+
 Raiders can cancel bids:
 * `/w Masterlooter [item-link] cancel` to cancel an existing bids (MS/OS/roll)
   * note: a roll is saved until the Loot Session is ended in case you re-roll on a given item
