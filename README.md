@@ -88,6 +88,11 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.10.1
+  * Adding support for `nr` - a "No Reply" flag in the note (text past the bid tier/amount) to tell the addon to NOT reply to the user when the bid is placed (lowers spam, but requires trust in the ML) - 100% optional
+  * Adding support for the flags to be sent in any order, semicolon separators are optional:
+    * `alt nr flag1 flag2 My Message!`, `nr; flag2 alt; flag1 My Message!`
+    * flags (like `alt`) must now be placed in the beginning of the message and no longer are parsed from other spots in the message (e.g. `My Message! alt` is no longer okay to get the alt flag set)
 * 1.10.0
   * Refactored ChatThrottleLib to use configurable line buffer (increased from 5 to 10 lines)
     * This should hopefully remove the `ChatThrottleLib.lua:147:attempt to index field 'list' (a nil value)` spam error
