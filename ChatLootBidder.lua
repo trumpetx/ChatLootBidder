@@ -380,6 +380,34 @@ local function realAmt(amt, real)
   return amt
 end
 
+-- Roll off among candidates to pick targetCount winners. Returns the winners array.
+local function RollOff(candidates, targetCount, roll, item, breakTies)
+  if getn(candidates) <= targetCount then return candidates end
+  while getn(candidates) > targetCount and breakTies do
+    local winningRoll = 0
+    for _,bidder in pairs(candidates) do
+      local r = roll[bidder]
+      if r == -1 or r == nil then
+        r = Roll()
+        roll[bidder] = r
+        MessageWinnerChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
+      else
+        MessageWinnerChannel(PlayerWithClassColor(bidder) .. " already rolled " .. r .. " (1-100) for " .. item)
+      end
+      if winningRoll < r then winningRoll = r end
+    end
+    local newCandidates = {}
+    for _,bidder in pairs(candidates) do
+      if roll[bidder] == winningRoll then
+        table.insert(newCandidates, bidder)
+      end
+      roll[bidder] = -1
+    end
+    candidates = newCandidates
+  end
+  return candidates
+end
+
 local function BidSummary(announceWinners)
   if session == nil then
     Error("There is no existing session")
@@ -394,88 +422,112 @@ local function BidSummary(announceWinners)
     local cancel = itemSession["cancel"] or {}
     local notes = itemSession["notes"] or {}
     local real = itemSession["real"] or {}
+    local bidCopies = itemSession["bidCopies"] or 1
+    local srCopies = (itemSession["count"] or 1) - bidCopies
     local needsRoll = IsTableEmpty(sr) and IsTableEmpty(ms) and IsTableEmpty(ofs)
+    local breakTies = ChatLootBidder_Store.BreakTies or sessionMode ~= "DKP"
+
+    -- Generate pending rolls
     if announceWinners then
       for bidder,r in pairs(roll) do
         if r == -1 then
           r = Roll()
           roll[bidder] = r
-          -- Individually inform users of their roll so that if they lose with no announcement, they understand why
           if getn(roll) > 1 and needsRoll and not ChatLootBidder_Store.RollAnnounce then
             SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
           end
         end
       end
     end
-    local winner = {}
-    local winnerBid = nil
-    local winnerTier = nil
-    local header = true
+
     local summary = {}
+    local header
+
+    -- ========== SR Resolution ==========
+    local srWinners = {}
+    header = true
     if not IsTableEmpty(sr) then
-      local sortedMainspecKeys = GetKeysSortedByValue(sr)
-      for k,bidder in pairs(sortedMainspecKeys) do
-        if IsTableEmpty(winner) then table.insert(summary, item) end
+      local sortedSrKeys = GetKeysSortedByValue(sr)
+      for _,bidder in pairs(sortedSrKeys) do
+        if IsTableEmpty(summary) then table.insert(summary, item) end
         if header then table.insert(summary, "- Soft Reserve:"); header = false end
-        local bid = sr[bidder]
-        if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "sr"
-        elseif not IsTableEmpty(winner) and winnerTier == "sr" and winnerBid == bid then table.insert(winner, bidder) end
-        table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid)
+        table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. sr[bidder])
+      end
+      if announceWinners then
+        local srTarget = math.min(srCopies, getn(sortedSrKeys))
+        if getn(sortedSrKeys) > srTarget then
+          MessageWinnerChannel(PlayersWithClassColors(sortedSrKeys) .. " SR'd " .. item .. ", rolling it off for " .. srTarget .. (srTarget == 1 and " copy:" or " copies:"))
+          srWinners = RollOff(sortedSrKeys, srTarget, roll, item, breakTies)
+        else
+          srWinners = sortedSrKeys
+        end
+        for _,w in pairs(srWinners) do
+          MessageWinnerChannel(PlayerWithClassColor(w) .. " wins " .. item .. " for SR")
+          if ChatLootBidder_Store.AutoRemoveSrAfterWin then
+            HandleSrRemove(w, item)
+          end
+        end
       end
     end
+
+    -- ========== MS/OS/Roll Resolution ==========
+    local bidWinners = {} -- array of { bidder, tier, bid, displayBid }
+    local remaining = bidCopies
+
+    -- Build summary lists and collect eligible bidders per tier
+    -- MS tier
     header = true
+    local msBidders = {} -- { {bidder, bid}, ... } sorted by bid desc
     if not IsTableEmpty(ms) then
-      local sortedMainspecKeys = GetKeysSortedByValue(ms)
-      for k,bidder in pairs(sortedMainspecKeys) do
+      local sortedMsKeys = GetKeysSortedByValue(ms)
+      for _,bidder in pairs(sortedMsKeys) do
         if cancel[bidder] == nil then
-          if IsTableEmpty(winner) then table.insert(summary, item) end
+          if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Main Spec:"); header = false end
           local bid = ms[bidder]
-          local displayText = realAmt(bid, real[bidder])
-          -- If the bid is not from an offspec bid, add it to the summary
           if not (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os") then
-            table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. displayText .. AppendNote(notes[bidder]))
+            table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(bid, real[bidder]) .. AppendNote(notes[bidder]))
           end
-          -- Always include in winner determination, regardless of origin
-          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "ms"
-          elseif not IsTableEmpty(winner) and winnerTier == "ms" and winnerBid == bid then table.insert(winner, bidder) end
+          table.insert(msBidders, { bidder = bidder, bid = bid })
         end
       end
     end
+
+    -- OS tier
     header = true
+    local osBidders = {}
     if not IsTableEmpty(ofs) then
-      local sortedOffspecKeys = GetKeysSortedByValue(ofs)
-      for k,bidder in pairs(sortedOffspecKeys) do
+      local sortedOsKeys = GetKeysSortedByValue(ofs)
+      for _,bidder in pairs(sortedOsKeys) do
         if cancel[bidder] == nil and (ms[bidder] == nil or (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os")) then
-          if IsTableEmpty(winner) then table.insert(summary, item) end
+          if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Off Spec:"); header = false end
-          local bid = ofs[bidder]
-          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "os"
-          elseif not IsTableEmpty(winner) and winnerTier == "os" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(bid, real[bidder]) .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(ofs[bidder], real[bidder]) .. AppendNote(notes[bidder]))
+          table.insert(osBidders, { bidder = bidder, bid = ofs[bidder] })
         end
       end
     end
+
+    -- Roll tier
     header = true
+    local rollBidders = {}
     if not IsTableEmpty(roll) then
       local sortedRollKeys = GetKeysSortedByValue(roll)
       local annouceRollString = ""
-      for k,bidder in pairs(sortedRollKeys) do
-        if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil then
-          if IsTableEmpty(winner) then table.insert(summary, item) end
+      for _,bidder in pairs(sortedRollKeys) do
+        if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil and sr[bidder] == nil then
+          if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Rolls:"); header = false end
-          local bid = roll[bidder]
-          if IsTableEmpty(winner) then table.insert(winner, bidder); winnerBid = bid; winnerTier = "roll"
-          elseif not IsTableEmpty(winner) and winnerTier == "roll" and winnerBid == bid then table.insert(winner, bidder) end
-          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. bid .. AppendNote(notes[bidder]))
+          table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. roll[bidder] .. AppendNote(notes[bidder]))
+          table.insert(rollBidders, { bidder = bidder, bid = roll[bidder] })
           if announceWinners and needsRoll and ChatLootBidder_Store.RollAnnounce then
             if string.len(annouceRollString) > 200 then
               MessageStartChannel(annouceRollString)
-              annouceRollString = PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+              annouceRollString = PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
             elseif string.len(annouceRollString) == 0 then
-              annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+              annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
             else
-              annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. bid .. ")"
+              annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
             end
           end
         end
@@ -484,81 +536,103 @@ local function BidSummary(announceWinners)
         MessageStartChannel(annouceRollString)
       end
     end
-    local breakTies = ChatLootBidder_Store.BreakTies or sessionMode ~= "DKP"
-    if getn(winner) > 1 then
-      if sessionMode == "DKP" then
-        MessageWinnerChannel(PlayersWithClassColors(winner) .. " tied with a ".. string.upper(winnerTier) .. " bid of " .. winnerBid .. ", rolling it off:")
-      else
-        MessageWinnerChannel(PlayersWithClassColors(winner) .. " bid ".. string.upper(winnerTier) ..", rolling it off:")
-      end
-      while getn(winner) > 1 and breakTies do
-        local winningRoll = 0
-        for _,bidder in pairs(winner) do
-          local r = roll[bidder]
-          if r == -1 or r == nil then
-            r = Roll()
-            roll[bidder] = r
-            MessageWinnerChannel(PlayerWithClassColor(bidder) .. " rolls " .. r .. " (1-100) for " .. item)
+
+    -- Resolve winners tier by tier: MS > OS > Roll
+    if announceWinners then
+      local tiers = {
+        { name = "ms", bidders = msBidders },
+        { name = "os", bidders = osBidders },
+        { name = "roll", bidders = rollBidders },
+      }
+      for _, tierInfo in pairs(tiers) do
+        if remaining <= 0 then break end
+        -- Group bidders by bid amount (already sorted desc)
+        local groups = {}
+        local currentGroup = nil
+        local currentBid = nil
+        for _, entry in pairs(tierInfo.bidders) do
+          if currentBid ~= entry.bid then
+            currentGroup = {}
+            currentBid = entry.bid
+            table.insert(groups, { bid = currentBid, members = currentGroup })
+          end
+          table.insert(currentGroup, entry.bidder)
+        end
+        for _, group in pairs(groups) do
+          if remaining <= 0 then break end
+          if getn(group.members) <= remaining then
+            -- All win
+            for _, bidder in pairs(group.members) do
+              table.insert(bidWinners, { bidder = bidder, tier = tierInfo.name, bid = group.bid })
+              remaining = remaining - 1
+            end
           else
-            r = roll[bidder]
-            MessageWinnerChannel(PlayerWithClassColor(bidder) .. " already rolled " .. r .. " (1-100) for " .. item)
+            -- More tied bidders than remaining copies, roll off
+            if sessionMode == "DKP" then
+              MessageWinnerChannel(PlayersWithClassColors(group.members) .. " tied with a " .. string.upper(tierInfo.name) .. " bid of " .. group.bid .. ", rolling it off:")
+            else
+              MessageWinnerChannel(PlayersWithClassColors(group.members) .. " bid " .. string.upper(tierInfo.name) .. ", rolling it off:")
+            end
+            local winners = RollOff(group.members, remaining, roll, item, breakTies)
+            for _, bidder in pairs(winners) do
+              table.insert(bidWinners, { bidder = bidder, tier = tierInfo.name, bid = group.bid })
+              remaining = remaining - 1
+            end
           end
-          if winningRoll < r then winningRoll = r end
         end
-        local newWinner = {}
-        for _,bidder in pairs(winner) do
-          if roll[bidder] == winningRoll then
-            table.insert(newWinner, bidder)
-          end
-          roll[bidder] = -1
-        end
-        winner = newWinner
       end
-    end
-    if IsTableEmpty(winner) then
-      if announceWinners then MessageStartChannel("No bids received for " .. item) end
-      table.insert(summary, item .. ": No Bids")
-    elseif announceWinners then
-      local winnerMessage = PlayersWithClassColors(winner) .. (getn(winner) > 1 and " tie for " or " wins ") .. item
-      if sessionMode == "DKP" then
-        local displayTier = winnerTier
-        local displayBidAmount = winnerBid
 
-        -- Check if winner came from offspec bid
-        local winnerFromOffspec = winnerTier == "ms" and itemSession["ms_origin"] and itemSession["ms_origin"][winner[1]] == "os"
-
-        -- Check if there were any natural mainspec bids competing
-        local hasNaturalMainspecBids = false
-        for bidder, bid in pairs(ms) do
-          if cancel[bidder] == nil and not (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os") then
-            hasNaturalMainspecBids = true
-            break
+      -- Announce each winner
+      for _, w in pairs(bidWinners) do
+        local winnerMessage = PlayerWithClassColor(w.bidder) .. " wins " .. item
+        if sessionMode == "DKP" then
+          local displayTier = w.tier
+          local displayBidAmount = w.bid
+          -- Check if winner came from offspec bid
+          local winnerFromOffspec = w.tier == "ms" and itemSession["ms_origin"] and itemSession["ms_origin"][w.bidder] == "os"
+          if winnerFromOffspec then
+            -- Check if there were any natural mainspec bids competing
+            local hasNaturalMainspecBids = false
+            for bidder, bid in pairs(ms) do
+              if cancel[bidder] == nil and not (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os") then
+                hasNaturalMainspecBids = true
+                break
+              end
+            end
+            if not hasNaturalMainspecBids then
+              displayTier = "os"
+              displayBidAmount = ofs[w.bidder]
+            end
           end
-        end
-
-        -- If winner came from offspec and no natural mainspec bids competed, display as offspec with original amount
-        if winnerFromOffspec and not hasNaturalMainspecBids then
-          displayTier = "os"
-          displayBidAmount = ofs[winner[1]] -- Use original offspec bid amount
-        end
-
-        winnerMessage = winnerMessage .. " with a " .. (winnerTier == "roll" and "roll of " or (string.upper(displayTier) .. " bid of "))
-        if getn(winner) == 1 and winnerTier ~= "roll" then
-          winnerMessage = winnerMessage .. realAmt(displayBidAmount, real[winner[1]])
+          winnerMessage = winnerMessage .. " with a " .. (w.tier == "roll" and "roll of " or (string.upper(displayTier) .. " bid of "))
+          if w.tier ~= "roll" then
+            winnerMessage = winnerMessage .. realAmt(displayBidAmount, real[w.bidder])
+          else
+            winnerMessage = winnerMessage .. w.bid
+          end
+        elseif w.tier == "roll" then
+          winnerMessage = winnerMessage .. " with a roll of " .. w.bid
         else
-          winnerMessage = winnerMessage .. displayBidAmount
+          winnerMessage = winnerMessage .. " for " .. string.upper(w.tier)
         end
-      elseif winnerTier == "roll" then
-        winnerMessage = winnerMessage .. " with a roll of " .. winnerBid
-      else
-        winnerMessage = winnerMessage .. " for " .. string.upper(winnerTier)
+        MessageWinnerChannel(winnerMessage)
       end
-      MessageWinnerChannel(winnerMessage)
+
+      -- No bids for remaining copies
+      if IsTableEmpty(srWinners) and IsTableEmpty(bidWinners) then
+        MessageStartChannel("No bids received for " .. item)
+        table.insert(summary, item .. ": No Bids")
+      elseif remaining > 0 then
+        MessageStartChannel("No bids received for " .. item)
+      end
+    else
+      -- Summary mode (not announcing winners)
+      if IsTableEmpty(msBidders) and IsTableEmpty(osBidders) and IsTableEmpty(rollBidders) and IsTableEmpty(sr) then
+        table.insert(summary, item .. ": No Bids")
+      end
     end
+
     table.insert(summaries, summary)
-    if winnerTier == "sr" and ChatLootBidder_Store.AutoRemoveSrAfterWin then
-      HandleSrRemove(winner[1], item)
-    end
   end
   for _,summary in pairs(summaries) do
     for _,line in pairs(summary) do
@@ -595,15 +669,26 @@ function ChatLootBidderFrame:Start(items, timer, mode)
   if not IsMasterLooterSet() then Error("Master Looter must be set to start a loot session"); return end
   local mode = mode ~= nil and mode or ChatLootBidder_Store.DefaultSessionMode
   if session ~= nil then ChatLootBidderFrame:End() end
-  local stageList = GetKeysWhere(stage, function(k,v) return v == true end)
-  if items == nil then
-    items = stageList
-  else
-    for _, v in pairs(stageList) do
-      table.insert(items, v)
+  -- Build a count map from stage + command-line items
+  local itemCounts = {}
+  local itemOrder = {}
+  if stage then
+    for link, count in pairs(stage) do
+      if count and count > 0 then
+        itemCounts[link] = count
+        table.insert(itemOrder, link)
+      end
     end
   end
-  if IsTableEmpty(items) then Error("You must provide at least a single item to bid on"); return end
+  if items then
+    for _, link in pairs(items) do
+      if not itemCounts[link] then
+        table.insert(itemOrder, link)
+      end
+      itemCounts[link] = (itemCounts[link] or 0) + 1
+    end
+  end
+  if IsTableEmpty(itemCounts) then Error("You must provide at least a single item to bid on"); return end
   ChatLootBidderFrame:EndSessionButtonShown()
   session = {}
   sessionMode = mode
@@ -618,33 +703,49 @@ function ChatLootBidderFrame:Start(items, timer, mode)
   table.insert(startChannelMessage, "-----------")
   local bidAddonMessage = "mode=" .. mode .. ",items="
   local exampleItem
-  for k,i in pairs(items) do
+  for _,i in pairs(itemOrder) do
+    local count = itemCounts[i]
     local itemName = ParseItemNameFromItemLink(i)
     local srsOnItem = GetKeysWhere(srs, function(player, playerSrs) return IsInRaid(player) and TableContains(playerSrs, itemName) end)
     local srLen = TableLength(srsOnItem)
+    local srCopies = math.min(srLen, count)
+    local bidCopies = count - srCopies
     session[i] = {}
+    session[i]["count"] = count
+    session[i]["bidCopies"] = bidCopies
     session[i]["cancel"] = {}
     session[i]["roll"] = {}
     session[i]["real"] = {}
-    if srLen == 0 then
-      exampleItem = i
-      table.insert(startChannelMessage, i)
-      bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
-      session[i]["ms"] = {}
-      session[i]["os"] = {}
-      session[i]["notes"] = {}
-    else
-      table.insert(startChannelMessage, i .. " SR (" .. srLen .. ")")
+    -- Set up SR tables if any copies are claimed by soft reserves
+    if srCopies > 0 then
       session[i]["sr"] = {}
       for _,sr in pairs(srsOnItem) do
         session[i]["sr"][sr] = 1
         session[i]["roll"][sr] = -1
-        if srLen > 1 then
+      end
+      table.insert(startChannelMessage, i .. " SR (" .. srCopies .. ")")
+      if srLen <= srCopies then
+        -- Enough copies for all SRers, no competition
+        for _,sr in pairs(srsOnItem) do
+          SendResponse("You won " .. i .. " with your Soft Reserve!", sr)
+        end
+      else
+        -- More SRers than copies, they must roll off
+        for _,sr in pairs(srsOnItem) do
           SendResponse("Your Soft Reserve for " .. i .. " is contested by " .. (srLen-1) .. " other player" .. (srLen == 2 and "" or "s") .. ". '/random' now to record your own roll or do nothing for the addon to roll for you at the end of the session.", sr)
-        else
-          SendResponse("You won " .. i .. " with your Soft Reserve!", srsOnItem[1])
         end
       end
+    end
+    -- Set up bid tables if any copies remain for MS/OS/Roll bidding
+    if bidCopies > 0 then
+      exampleItem = i
+      session[i]["ms"] = {}
+      session[i]["os"] = {}
+      session[i]["notes"] = {}
+      local bidLabel = i .. (bidCopies > 1 and " (x" .. bidCopies .. ")" or "")
+      table.insert(startChannelMessage, bidLabel)
+      -- Dedup: send each link once to NotChatLootBidder
+      bidAddonMessage = bidAddonMessage .. string.gsub(i, ",", "~~~")
     end
   end
   table.insert(startChannelMessage, "-----------")
@@ -679,7 +780,10 @@ function ChatLootBidderFrame:Clear(stageOnly)
 end
 
 function ChatLootBidderFrame:Unstage(item, redraw)
-  stage[item] = false
+  if stage[item] then
+    stage[item] = stage[item] - 1
+    if stage[item] <= 0 then stage[item] = nil end
+  end
   if redraw then ChatLootBidderFrame:RedrawStage() end
 end
 
@@ -920,8 +1024,7 @@ local InitSlashCommands = function()
     elseif commandlist[1] == "stage" then
       local itemLinks = GetItemLinks(message)
       for _, item in pairs(itemLinks) do
-        local item = item
-        ChatLootBidderFrame:Stage(item, true)
+        ChatLootBidderFrame:Stage(item)
       end
       ChatLootBidderFrame:RedrawStage()
     elseif commandlist[1] == "summary" then
@@ -1105,6 +1208,11 @@ function ChatFrame_OnEvent(event)
       SendResponse(invalidBid, bidder)
       return
     end
+    -- Item is fully SR'd with no copies open for bidding
+    if itemSession["ms"] == nil then
+      SendResponse(item .. " is fully reserved via Soft Reserve and is not open for bidding", bidder)
+      return
+    end
     local mainSpec = itemSession["ms"]
     local offSpec = itemSession["os"]
     local roll = itemSession["roll"]
@@ -1254,9 +1362,9 @@ function ChatLootBidderFrame:EndSessionButtonShown()
 end
 
 function ChatLootBidderFrame:RedrawStage()
-  local i=1, k, show
-  for k, show in pairs(stage or {}) do
-    if show then
+  local i=1, k, count
+  for k, count in pairs(stage or {}) do
+    if count and count > 0 then
       if i == 9 then Error("You may only stage up to 8 items.  Use /loot clear [itm] to clear specific items or /clear to wipe it clean."); return end
       if not ChatLootBidderFrame:IsVisible() then
         ChatLootBidderFrame:StartSessionButtonShown()
@@ -1264,7 +1372,7 @@ function ChatLootBidderFrame:RedrawStage()
       local stageItem = getglobal(ChatLootBidderFrame:GetName() .. "Item"..i)
       local unstageButton = getglobal(ChatLootBidderFrame:GetName() .. "UnstageButton"..i)
       unstageButton:Show()
-      stageItem:SetText(k)
+      stageItem:SetText(k .. (count > 1 and " (x" .. count .. ")" or ""))
       stageItem:Show()
       i = i + 1
     end
@@ -1284,10 +1392,14 @@ function ChatLootBidderFrame:RedrawStage()
   getglobal(ChatLootBidderFrame:GetName() .. "HeaderString"):SetText(ChatLootBidder_Store.DefaultSessionMode .. " Mode")
 end
 
-function ChatLootBidderFrame:Stage(i, force)
+function ChatLootBidderFrame:Stage(i, count)
   stage = stage or {}
-  if force or stage[i] == nil then
-    stage[i] = true
+  if count then
+    -- Set-max: used by LOOT_OPENED to be idempotent on re-open
+    stage[i] = math.max(stage[i] or 0, count)
+  else
+    -- Increment: used by slash commands for explicit user intent
+    stage[i] = (stage[i] or 0) + 1
   end
 end
 
@@ -1355,13 +1467,17 @@ function ChatLootBidderFrame.LOOT_OPENED()
   if session ~= nil then return end
   if not ChatLootBidder_Store.AutoStage then return end
   if not IsMasterLooterSet() or not IsRaidAssistant(me) then return end
-  local i
+  -- Count items per link first, then set-max into stage (idempotent on re-open)
+  local lootCounts = {}
   for i=1, GetNumLootItems() do
     local lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive = GetLootSlotInfo(i)
-    -- print(lootIcon, lootName, lootQuantity, rarity, locked, isQuestItem, questId, isActive)
     if rarity >= ChatLootBidder_Store.MinRarity and rarity <= ChatLootBidder_Store.MaxRarity then
-      ChatLootBidderFrame:Stage(GetLootSlotLink(i))
+      local link = GetLootSlotLink(i)
+      lootCounts[link] = (lootCounts[link] or 0) + 1
     end
+  end
+  for link, count in pairs(lootCounts) do
+    ChatLootBidderFrame:Stage(link, count)
   end
   ChatLootBidderFrame:RedrawStage()
 end
