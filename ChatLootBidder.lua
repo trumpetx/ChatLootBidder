@@ -380,12 +380,13 @@ local function realAmt(amt, real)
   return amt
 end
 
--- Roll off among candidates to pick targetCount winners. Returns the winners array.
+-- Roll off among candidates to pick targetCount winners.
+-- Guarantees: returns at most targetCount entries.
 local function RollOff(candidates, targetCount, roll, item, breakTies)
   if getn(candidates) <= targetCount then return candidates end
   while getn(candidates) > targetCount and breakTies do
     local winningRoll = 0
-    for _,bidder in pairs(candidates) do
+    for _,bidder in ipairs(candidates) do
       local r = roll[bidder]
       if r == -1 or r == nil then
         r = Roll()
@@ -397,13 +398,22 @@ local function RollOff(candidates, targetCount, roll, item, breakTies)
       if winningRoll < r then winningRoll = r end
     end
     local newCandidates = {}
-    for _,bidder in pairs(candidates) do
+    for _,bidder in ipairs(candidates) do
       if roll[bidder] == winningRoll then
         table.insert(newCandidates, bidder)
       end
       roll[bidder] = -1
     end
     candidates = newCandidates
+  end
+  -- Contract: never return more than targetCount.
+  -- This triggers when breakTies is false (DKP mode) — the tie is left for the ML to resolve.
+  if getn(candidates) > targetCount then
+    local capped = {}
+    for idx = 1, targetCount do
+      table.insert(capped, candidates[idx])
+    end
+    return capped
   end
   return candidates
 end
@@ -448,7 +458,7 @@ local function BidSummary(announceWinners)
     header = true
     if not IsTableEmpty(sr) then
       local sortedSrKeys = GetKeysSortedByValue(sr)
-      for _,bidder in pairs(sortedSrKeys) do
+      for _,bidder in ipairs(sortedSrKeys) do
         if IsTableEmpty(summary) then table.insert(summary, item) end
         if header then table.insert(summary, "- Soft Reserve:"); header = false end
         table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. sr[bidder])
@@ -461,7 +471,7 @@ local function BidSummary(announceWinners)
         else
           srWinners = sortedSrKeys
         end
-        for _,w in pairs(srWinners) do
+        for _,w in ipairs(srWinners) do
           MessageWinnerChannel(PlayerWithClassColor(w) .. " wins " .. item .. " for SR")
           if ChatLootBidder_Store.AutoRemoveSrAfterWin then
             HandleSrRemove(w, item)
@@ -480,7 +490,7 @@ local function BidSummary(announceWinners)
     local msBidders = {} -- { {bidder, bid}, ... } sorted by bid desc
     if not IsTableEmpty(ms) then
       local sortedMsKeys = GetKeysSortedByValue(ms)
-      for _,bidder in pairs(sortedMsKeys) do
+      for _,bidder in ipairs(sortedMsKeys) do
         if cancel[bidder] == nil then
           if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Main Spec:"); header = false end
@@ -498,7 +508,7 @@ local function BidSummary(announceWinners)
     local osBidders = {}
     if not IsTableEmpty(ofs) then
       local sortedOsKeys = GetKeysSortedByValue(ofs)
-      for _,bidder in pairs(sortedOsKeys) do
+      for _,bidder in ipairs(sortedOsKeys) do
         if cancel[bidder] == nil and (ms[bidder] == nil or (itemSession["ms_origin"] and itemSession["ms_origin"][bidder] == "os")) then
           if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Off Spec:"); header = false end
@@ -514,7 +524,7 @@ local function BidSummary(announceWinners)
     if not IsTableEmpty(roll) then
       local sortedRollKeys = GetKeysSortedByValue(roll)
       local announceRollString = ""
-      for _,bidder in pairs(sortedRollKeys) do
+      for _,bidder in ipairs(sortedRollKeys) do
         if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil and sr[bidder] == nil then
           if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Rolls:"); header = false end
@@ -544,13 +554,13 @@ local function BidSummary(announceWinners)
         { name = "os", bidders = osBidders },
         { name = "roll", bidders = rollBidders },
       }
-      for _, tierInfo in pairs(tiers) do
+      for _, tierInfo in ipairs(tiers) do
         if remaining <= 0 then break end
         -- Group bidders by bid amount (already sorted desc)
         local groups = {}
         local currentGroup = nil
         local currentBid = nil
-        for _, entry in pairs(tierInfo.bidders) do
+        for _, entry in ipairs(tierInfo.bidders) do
           if currentBid ~= entry.bid then
             currentGroup = {}
             currentBid = entry.bid
@@ -558,11 +568,11 @@ local function BidSummary(announceWinners)
           end
           table.insert(currentGroup, entry.bidder)
         end
-        for _, group in pairs(groups) do
+        for _, group in ipairs(groups) do
           if remaining <= 0 then break end
           if getn(group.members) <= remaining then
             -- All win
-            for _, bidder in pairs(group.members) do
+            for _, bidder in ipairs(group.members) do
               table.insert(bidWinners, { bidder = bidder, tier = tierInfo.name, bid = group.bid })
               remaining = remaining - 1
             end
@@ -574,7 +584,7 @@ local function BidSummary(announceWinners)
               MessageWinnerChannel(PlayersWithClassColors(group.members) .. " bid " .. string.upper(tierInfo.name) .. ", rolling it off:")
             end
             local winners = RollOff(group.members, remaining, roll, item, breakTies)
-            for _, bidder in pairs(winners) do
+            for _, bidder in ipairs(winners) do
               table.insert(bidWinners, { bidder = bidder, tier = tierInfo.name, bid = group.bid })
               remaining = remaining - 1
             end
@@ -583,7 +593,7 @@ local function BidSummary(announceWinners)
       end
 
       -- Announce each winner
-      for _, w in pairs(bidWinners) do
+      for _, w in ipairs(bidWinners) do
         local winnerMessage = PlayerWithClassColor(w.bidder) .. " wins " .. item
         if sessionMode == "DKP" then
           local displayTier = w.tier
