@@ -513,7 +513,7 @@ local function BidSummary(announceWinners)
     local rollBidders = {}
     if not IsTableEmpty(roll) then
       local sortedRollKeys = GetKeysSortedByValue(roll)
-      local annouceRollString = ""
+      local announceRollString = ""
       for _,bidder in pairs(sortedRollKeys) do
         if cancel[bidder] == nil and ms[bidder] == nil and ofs[bidder] == nil and sr[bidder] == nil then
           if IsTableEmpty(summary) then table.insert(summary, item) end
@@ -521,19 +521,19 @@ local function BidSummary(announceWinners)
           table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. roll[bidder] .. AppendNote(notes[bidder]))
           table.insert(rollBidders, { bidder = bidder, bid = roll[bidder] })
           if announceWinners and needsRoll and ChatLootBidder_Store.RollAnnounce then
-            if string.len(annouceRollString) > 200 then
-              MessageStartChannel(annouceRollString)
-              annouceRollString = PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
-            elseif string.len(annouceRollString) == 0 then
-              annouceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
+            if string.len(announceRollString) > 200 then
+              MessageStartChannel(announceRollString)
+              announceRollString = PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
+            elseif string.len(announceRollString) == 0 then
+              announceRollString = "Rolls for " .. item .. " (1-100): " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
             else
-              annouceRollString = annouceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
+              announceRollString = announceRollString .. ", " .. PlayerWithClassColor(bidder) .. "(" .. roll[bidder] .. ")"
             end
           end
         end
       end
-      if getn(sortedRollKeys) > 1 and string.len(annouceRollString) > 0 then
-        MessageStartChannel(annouceRollString)
+      if getn(sortedRollKeys) > 1 and string.len(announceRollString) > 0 then
+        MessageStartChannel(announceRollString)
       end
     end
 
