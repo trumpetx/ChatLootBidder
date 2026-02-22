@@ -202,9 +202,10 @@ local function UnFlatten(tbl)
   local unflattened = {}
   local arr
   for _, arr in pairs(tbl) do
-    if unflattened[arr[1]] == nil then unflattened[arr[1]] = {} end
+    local key = Trim(arr[1])
+    if unflattened[key] == nil then unflattened[key] = {} end
     if arr[2] ~= nil then
-      table.insert(unflattened[Trim(arr[1])], Trim(arr[2]))
+      table.insert(unflattened[key], Trim(arr[2]))
     end
   end
   return unflattened

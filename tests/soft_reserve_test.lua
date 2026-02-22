@@ -164,3 +164,21 @@ test("sr_max_reserves_exceeded_pushes_oldest", function()
   assert_log_contains("You are no longer reserving: Thunderfury")
   assert_log_contains("Your Soft Reserve is currently [ Head of Onyxia ]")
 end)
+
+test("csv_import_with_whitespace_in_names", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.ItemValidation = false
+
+  CLB("sr load testList")
+  SrEditFrameHeaderString.GetText = function() return "csv" end
+  local parentFrame = { Hide = function() end }
+  ChatLootBidderFrame:DecodeAndSave('" PlayerA ","Band of Accuria"\n" PlayerA ","Quick Strike Ring"', parentFrame)
+
+  local srs = ChatLootBidder_Store.SoftReserveSessions["testList"]
+  assert(srs ~= nil, "SR session should exist")
+  assert(srs["PlayerA"] ~= nil, "Trimmed key 'PlayerA' should exist")
+  assert(srs[" PlayerA "] == nil, "Untrimmed key should not exist")
+  assert(#srs["PlayerA"] == 2, "PlayerA should have 2 SRs, got " .. #srs["PlayerA"])
+  assert(srs["PlayerA"][1] == "Band of Accuria", "First SR should be Band of Accuria")
+  assert(srs["PlayerA"][2] == "Quick Strike Ring", "Second SR should be Quick Strike Ring")
+end)
