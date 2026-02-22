@@ -27,7 +27,7 @@ jobs:
           path: luacov.report.out
       - name: Update coverage badge
         if: github.ref == 'refs/heads/master'
-        uses: schneegans/dynamic-badges-action@v1.7
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: bc17709a8d8ee6db28dcfbbd6dabef77
