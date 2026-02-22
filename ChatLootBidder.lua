@@ -513,7 +513,10 @@ local function BidSummary(announceWinners)
           if IsTableEmpty(summary) then table.insert(summary, item) end
           if header then table.insert(summary, "- Off Spec:"); header = false end
           table.insert(summary, "-- " .. PlayerWithClassColor(bidder) .. ": " .. realAmt(ofs[bidder], real[bidder]) .. AppendNote(notes[bidder]))
-          table.insert(osBidders, { bidder = bidder, bid = ofs[bidder] })
+          -- Only eligible for OS winner resolution if not already competing via MS (promoted OS bids compete through MS tier)
+          if ms[bidder] == nil then
+            table.insert(osBidders, { bidder = bidder, bid = ofs[bidder] })
+          end
         end
       end
     end
