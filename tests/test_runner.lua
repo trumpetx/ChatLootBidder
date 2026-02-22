@@ -24,7 +24,7 @@ end
 this = ChatLootBidderFrame
 ChatLootBidderFrame.ADDON_LOADED("ChatLootBidder")
 
--- 3. Run all *_test.lua files
+-- 3. Test framework
 _passed, _failed = 0, 0
 function test(name, fn)
   local ok, err = pcall(fn)
@@ -38,9 +38,19 @@ function test(name, fn)
   end
 end
 
+-- 4. Load shared test helpers (constants, SetUpTestEnvironment, CLB shortcut)
+dofile(tests_dir .. "/test_helpers.lua")
+
+-- 5. Run all test files grouped by feature
 local test_files = {
   tests_dir .. "/chat_loot_bidder_test.lua",
-  tests_dir .. "/session_functional_test.lua",
+  tests_dir .. "/session_lifecycle_test.lua",
+  tests_dir .. "/bidding_test.lua",
+  tests_dir .. "/dkp_test.lua",
+  tests_dir .. "/winner_resolution_test.lua",
+  tests_dir .. "/roll_system_test.lua",
+  tests_dir .. "/soft_reserve_test.lua",
+  tests_dir .. "/whisper_dedup_test.lua",
 }
 
 for _, path in ipairs(test_files) do
