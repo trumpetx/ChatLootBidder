@@ -87,6 +87,10 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.11.1
+  * Fixing a bug where the display doesn't announce properly when there is an OS + roll winner on a duplicate item drop
+* 1.11.0
+  * Adding support for duplciate item drops (top X bidders/rollers win)
 * 1.10.1
   * Adding support for `nr` - a "No Reply" flag in the note (text past the bid tier/amount) to tell the addon to NOT reply to the user when the bid is placed (lowers spam, but requires trust in the ML) - 100% optional
   * Adding support for the flags to be sent in any order, semicolon separators are optional:
