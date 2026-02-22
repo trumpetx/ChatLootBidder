@@ -71,7 +71,7 @@ function ChatLootBidderOptionsFrame_Reload() end
 -- TOC metadata
 function GetAddOnMetadata(addonName, key)
   if addonName ~= "ChatLootBidder" then return nil end
-  local meta = { Title = "Chat Loot Bidder", Notes = "Loot bidding", Version = "1.11.1", Author = "TrumpetX" }
+  local meta = { Title = "Chat Loot Bidder", Notes = "Loot bidding", Version = "1.11.2", Author = "TrumpetX" }
   return meta[key]
 end
 

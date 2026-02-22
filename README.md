@@ -90,6 +90,11 @@ Whisper the Master Looter in the following format: `/w Masterlooter sr [item-lin
 
 # Changelog
 
+* 1.11.2
+  * Fixing `/loot sr unload` crash (called undefined global instead of frame method)
+  * Fixing SR item name autocorrect whisper not being sent to the bidder
+  * Fixing CSV import crash when player names contain leading/trailing whitespace
+  * Fixing auto-generated rolls not being whispered to players when Roll Announce is disabled
 * 1.11.1
   * Fixing a bug where the display doesn't announce properly when there is an OS + roll winner on a duplicate item drop
 * 1.11.0
