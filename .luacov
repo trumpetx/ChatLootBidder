@@ -4,11 +4,11 @@ return {
     "Options$",
     "VersionUtil$",
     "csv$",
-    "json$",
     "i18n$",
   },
   exclude = {
     "tests/",
-    "ChatThrottleLib",
+    "ChatThrottleLib$",
+    "json$",
   },
 }

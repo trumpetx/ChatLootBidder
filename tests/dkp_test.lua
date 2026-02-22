@@ -69,3 +69,47 @@ test("dkp_combined_alt_and_offspec_penalty", function()
   -- Beats PlayerB's MS 80; real bid was 400
   assert_log_contains("PlayerA wins " .. TestItemLink .. " with a MS bid of 100(400)")
 end)
+
+test("dkp_tie_rolloff_message", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.DefaultSessionMode = "DKP"
+
+  CLB("start " .. TestItemLink)
+  SendWhisper("PlayerA", TestItemLink .. " ms 100")
+  SendWhisper("PlayerB", TestItemLink .. " ms 100")
+  CLB("end")
+
+  assert_log_contains("tied with a MS bid of 100, rolling it off:")
+end)
+
+test("dkp_roll_winner_display", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.DefaultSessionMode = "DKP"
+
+  CLB("start " .. TestItemLink)
+  SendWhisper("PlayerA", TestItemLink .. " roll")
+  SimulateRoll("PlayerA", 88)
+  CLB("end")
+
+  assert_log_contains("PlayerA wins " .. TestItemLink .. " with a roll of 88")
+end)
+
+test("dkp_tie_capped_no_break_ties", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.DefaultSessionMode = "DKP"
+  ChatLootBidder_Store.BreakTies = false
+
+  CLB("start " .. TestItemLink)
+  SendWhisper("PlayerA", TestItemLink .. " ms 100")
+  SendWhisper("PlayerB", TestItemLink .. " ms 100")
+  SendWhisper("PlayerC", TestItemLink .. " ms 100")
+  CLB("end")
+
+  local winners = 0
+  for _, entry in ipairs(TestChatLog) do
+    if entry.msg and string.find(entry.msg, "wins " .. TestItemLink .. " with a MS bid of 100", 1, true) then
+      winners = winners + 1
+    end
+  end
+  assert(winners == 1, "Expected exactly one winner when BreakTies is false, got " .. winners)
+end)

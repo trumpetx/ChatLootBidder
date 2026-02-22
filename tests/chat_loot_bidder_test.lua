@@ -25,3 +25,26 @@ test("default_store_state", function()
   assert(ChatLootBidder_Store.BidAnnounce == false, "BidAnnounce default false")
   assert(ChatLootBidder_Store.BreakTies == true, "BreakTies default true")
 end)
+
+test("set_prop_value_updates_store", function()
+  SetUpTestEnvironment()
+
+  ChatLootBidderFrame:SetPropValue("BidChannel", "GUILD")
+  assert(ChatLootBidder_Store.BidChannel == "GUILD", "Expected BidChannel update through SetPropValue")
+
+  ChatLootBidderFrame:SetPropValue("ChatLootBidderOptionsFrameSessionAnnounceChannel", "RAID_WARNING", "ChatLootBidderOptionsFrame")
+  assert(ChatLootBidder_Store.SessionAnnounceChannel == "RAID_WARNING", "Expected prefixed property update through SetPropValue")
+end)
+
+test("extract_params_with_semicolons", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.DefaultSessionMode = "DKP"
+  ChatLootBidder_Store.AltPenalty = 50
+
+  CLB("start " .. TestItemLink)
+  SendWhisper("PlayerA", TestItemLink .. " ms 100 alt;")
+  SendWhisper("PlayerB", TestItemLink .. " ms 60")
+  CLB("end")
+
+  assert_log_contains("PlayerB wins " .. TestItemLink .. " with a MS bid of 60")
+end)

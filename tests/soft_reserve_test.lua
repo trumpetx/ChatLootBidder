@@ -182,3 +182,127 @@ test("csv_import_with_whitespace_in_names", function()
   assert(srs["PlayerA"][1] == "Band of Accuria", "First SR should be Band of Accuria")
   assert(srs["PlayerA"][2] == "Quick Strike Ring", "Second SR should be Quick Strike Ring")
 end)
+
+test("sr_delete_current_session", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  SendWhisper("PlayerA", "sr " .. TestItemLink)
+  ClearChatLog()
+  CLB("sr delete")
+
+  assert_log_contains("Deleted currently loaded Soft Reserve session: testList")
+  ResetWhisperDedup()
+  SendWhisper("PlayerA", "sr " .. TestItemLink)
+  assert_log_contains("There is no Soft Reserve session loaded")
+end)
+
+test("sr_delete_named_session", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load activeList")
+  ChatLootBidder_Store.SoftReserveSessions["targetList"] = {
+    ["PlayerA"] = { "Thunderfury, Blessed Blade of the Windseeker" }
+  }
+  ClearChatLog()
+  CLB("sr delete targetList")
+
+  assert_log_contains("Deleted Soft Reserve session: targetList")
+  assert(ChatLootBidder_Store.SoftReserveSessions["targetList"] == nil, "Expected named SR list to be deleted")
+  assert(ChatLootBidder_Store.SoftReserveSessions["activeList"] ~= nil, "Expected active SR list to remain")
+end)
+
+test("sr_delete_nonexistent_errors", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  ClearChatLog()
+  CLB("sr delete doesNotExist")
+
+  assert_log_contains("No Soft Reserve session exists with the label: doesNotExist")
+end)
+
+test("sr_show_displays_reserves", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  ChatLootBidder_Store.SoftReserveSessions["testList"] = {
+    ["PlayerA"] = { "Thunderfury, Blessed Blade of the Windseeker" },
+    ["PlayerB"] = { "Head of Onyxia" }
+  }
+  ClearChatLog()
+  CLB("sr show")
+
+  assert_log_contains("Soft Reserve Bids:")
+  assert_log_contains("PlayerA: Thunderfury, Blessed Blade of the Windseeker")
+  assert_log_contains("PlayerB: Head of Onyxia")
+end)
+
+test("sr_show_no_session_errors", function()
+  SetUpTestEnvironment()
+
+  CLB("sr show")
+
+  assert_log_contains("No Soft Reserve session loaded")
+end)
+
+test("sr_instructions_broadcasts", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  ClearChatLog()
+  CLB("sr instructions")
+
+  assert_log_contains("Set your SR: /w TestPlayer sr")
+  assert_log_contains("Get your current SR: /w TestPlayer sr")
+  assert_log_contains("Clear your current SR: /w TestPlayer sr clear")
+end)
+
+test("sr_load_without_name_creates_default", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load")
+
+  assert_log_contains("New Soft Reserve list [")
+  assert(ChatLootBidderFrame:LoadedSoftReserveSession() ~= nil, "Expected a default SR session to be loaded")
+end)
+
+test("sr_toggle_lock_without_command", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  assert(not ChatLootBidderFrame:IsLocked(), "Expected SR to start unlocked")
+
+  ChatLootBidderFrame:ToggleSrLock()
+  assert(ChatLootBidderFrame:IsLocked(), "Expected SR to be locked after toggle")
+
+  ChatLootBidderFrame:ToggleSrLock()
+  assert(not ChatLootBidderFrame:IsLocked(), "Expected SR to be unlocked after second toggle")
+end)
+
+test("sr_lock_no_session_errors", function()
+  SetUpTestEnvironment()
+
+  CLB("sr lock")
+
+  assert_log_contains("No Soft Reserve session loaded")
+end)
+
+test("sr_add_invalid_item_rejected", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.ItemValidation = true
+  AtlasLoot_Data = {
+    ["AtlasLootItems"] = {
+      ["TestBoss"] = {
+        { 19019, "INV_Sword", "=q4=Thunderfury, Blessed Blade of the Windseeker", "=ds=", "5%" },
+      }
+    }
+  }
+
+  CLB("sr load testList")
+  ClearChatLog()
+  SendWhisper("PlayerA", "sr DefinitelyNotAnAtlasLootItem")
+
+  assert_log_contains("does not appear to be a valid item name")
+  AtlasLoot_Data = nil
+end)

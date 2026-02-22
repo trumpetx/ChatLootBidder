@@ -40,6 +40,7 @@ tremove = table.remove
 format = string.format
 
 function GetFramerate() return 60 end
+function date(fmt) return os.date(fmt) end
 
 -- getglobal: return a stub frame for any name (addon uses dynamic names).
 function getglobal(name)

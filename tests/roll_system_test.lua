@@ -65,3 +65,13 @@ test("roll_ignored_without_bid_multi_item", function()
 
   assert_log_contains("Ignoring your roll of 85")
 end)
+
+test("dkp_roll_ignored_without_declaration", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.DefaultSessionMode = "DKP"
+
+  CLB("start " .. TestItemLink .. " " .. TestItemLink2)
+  SimulateRoll("PlayerA", 90)
+
+  assert_log_contains("Ignoring your roll of 90. You must first declare that you are rolling on an item first")
+end)
