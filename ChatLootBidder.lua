@@ -444,7 +444,7 @@ local function BidSummary(announceWinners)
         if r == -1 then
           r = Roll()
           roll[bidder] = r
-          if getn(roll) > 1 and needsRoll and not ChatLootBidder_Store.RollAnnounce then
+          if TableLength(roll) > 1 and needsRoll and not ChatLootBidder_Store.RollAnnounce then
             SendResponse("You roll " .. r .. " (1-100) for " .. item, bidder)
           end
         end
