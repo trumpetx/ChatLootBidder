@@ -14,6 +14,10 @@ local toc_files = {
   "csv.lua",
   "json.lua",
   "i18n.lua",
+  "CLB_Util.lua",
+  "CLB_Messaging.lua",
+  "CLB_SoftReserve.lua",
+  "CLB_Bidding.lua",
   "ChatLootBidder.lua",
 }
 for _, name in ipairs(toc_files) do
