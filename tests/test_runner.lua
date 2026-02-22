@@ -41,17 +41,30 @@ end
 -- 4. Load shared test helpers (constants, SetUpTestEnvironment, CLB shortcut)
 dofile(tests_dir .. "/test_helpers.lua")
 
--- 5. Run all test files grouped by feature
-local test_files = {
-  tests_dir .. "/chat_loot_bidder_test.lua",
-  tests_dir .. "/session_lifecycle_test.lua",
-  tests_dir .. "/bidding_test.lua",
-  tests_dir .. "/dkp_test.lua",
-  tests_dir .. "/winner_resolution_test.lua",
-  tests_dir .. "/roll_system_test.lua",
-  tests_dir .. "/soft_reserve_test.lua",
-  tests_dir .. "/whisper_dedup_test.lua",
-}
+-- 5. Discover and run all *_test.lua files
+local function list_test_files()
+  local f = io.popen('find ' .. tests_dir .. ' -maxdepth 1 -name "*_test.lua" 2>/dev/null')
+  if not f then return {} end
+  local list = {}
+  for line in f:lines() do
+    if line ~= "" then list[#list + 1] = line end
+  end
+  f:close()
+  return list
+end
+
+local function shuffle(list)
+  for i = #list, 2, -1 do
+    local j = math.random(i)
+    list[i], list[j] = list[j], list[i]
+  end
+end
+
+local seed = os.time() + math.floor(os.clock() * 100000)
+math.randomseed(seed)
+io.write("Random seed: " .. seed .. "\n")
+local test_files = list_test_files()
+shuffle(test_files)
 
 for _, path in ipairs(test_files) do
   io.write("Running " .. path:match("([^/\\]+)$") .. "\n")

@@ -1,6 +1,8 @@
 -- Sanity tests: default store state after LoadVariables (run via ADDON_LOADED in test_runner).
 
 test("default_store_state", function()
+  ResetAddonState()
+
   assert(ChatLootBidder_Store ~= nil, "ChatLootBidder_Store should exist after addon load")
 
   assert(ChatLootBidder_Store.DefaultSessionMode == "MSOS", "DefaultSessionMode default")
