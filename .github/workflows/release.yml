@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract TOC version
+        id: toc
+        run: |
+          VERSION=$(grep -oP '## Version:\s*\K\S+' ChatLootBidder.toc)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag matches TOC version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$TAG_VERSION" != "${{ steps.toc.outputs.version }}" ]; then
+            echo "Tag $TAG_VERSION does not match TOC version ${{ steps.toc.outputs.version }}"
+            exit 1
+          fi
+
+      - name: Package addon
+        run: zip ChatLootBidder.zip *.lua *.xml *.toc *.md
+
+      - name: Create GitHub Release
+        run: >
+          gh release create "$GITHUB_REF_NAME"
+          "ChatLootBidder.zip"
+          --title "ChatLootBidder ${{ steps.toc.outputs.version }}"
+          --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
