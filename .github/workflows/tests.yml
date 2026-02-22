@@ -7,7 +7,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Lua 5.1
-        run: sudo apt-get update && sudo apt-get install -y lua5.1
-      - name: Run tests
-        run: lua5.1 tests/test_runner.lua
+      - name: Install Lua 5.1 and LuaRocks
+        run: sudo apt-get update && sudo apt-get install -y lua5.1 luarocks
+      - name: Install LuaCov
+        run: sudo luarocks install luacov
+      - name: Run tests with coverage
+        run: lua5.1 -lluacov tests/test_runner.lua
+      - name: Generate coverage report
+        run: luacov
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(awk '/^Total[[:space:]]/ { print $NF }' luacov.report.out | tr -d '%' | tail -1)
+          echo "percentage=$COVERAGE" >> "$GITHUB_OUTPUT"
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: luacov.report.out
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/master'
+        uses: schneegans/dynamic-badges-action@v1.7
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: bc17709a8d8ee6db28dcfbbd6dabef77
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.percentage }}%
+          valColorRange: ${{ steps.coverage.outputs.percentage }}
+          minColorRange: 0
+          maxColorRange: 100

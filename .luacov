@@ -1,0 +1,14 @@
+return {
+  include = {
+    "ChatLootBidder$",
+    "Options$",
+    "VersionUtil$",
+    "csv$",
+    "json$",
+    "i18n$",
+  },
+  exclude = {
+    "tests/",
+    "ChatThrottleLib",
+  },
+}

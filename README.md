@@ -1,3 +1,6 @@
+![Tests](https://github.com/trumpetx/ChatLootBidder/actions/workflows/tests.yml/badge.svg)
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/trumpetx/bc17709a8d8ee6db28dcfbbd6dabef77/raw/coverage.json)
+
 # Overview and Goals
 This addon's primary goal is to manage the process of bidding and rolling on items in a Master Looter environment in a semi-automated way.  This addon is for Master Looters.  If you are a bidder/raider, you should check out the [NotChatLootBidder](https://github.com/trumpetx/NotChatLootBidder) addon.
 
