@@ -25,15 +25,17 @@ this = ChatLootBidderFrame
 ChatLootBidderFrame.ADDON_LOADED("ChatLootBidder")
 
 -- 3. Run all *_test.lua files
-local passed, failed = 0, 0
-local function run_file(path)
-  local f, err = loadfile(path)
-  if not f then
-    io.stderr:write("load error " .. path .. ": " .. tostring(err) .. "\n")
-    return false
+_passed, _failed = 0, 0
+function test(name, fn)
+  local ok, err = pcall(fn)
+  if ok then
+    _passed = _passed + 1
+    io.write("  PASS " .. name .. "\n")
+  else
+    _failed = _failed + 1
+    io.stderr:write("  FAIL " .. name .. "\n")
+    io.stderr:write("    " .. tostring(err) .. "\n")
   end
-  f()
-  return true
 end
 
 local test_files = {
@@ -42,16 +44,9 @@ local test_files = {
 }
 
 for _, path in ipairs(test_files) do
-  local ok, err = pcall(run_file, path)
-  if ok then
-    passed = passed + 1
-    io.write("PASS " .. path:match("([^/\\]+)$") .. "\n")
-  else
-    failed = failed + 1
-    io.stderr:write("FAIL " .. path:match("([^/\\]+)$") .. "\n")
-    if err then io.stderr:write(tostring(err) .. "\n") end
-  end
+  io.write("Running " .. path:match("([^/\\]+)$") .. "\n")
+  dofile(path)
 end
 
-io.write("\n" .. passed .. " passed, " .. failed .. " failed\n")
-if failed > 0 then os.exit(1) end
+io.write("\n" .. _passed .. " passed, " .. _failed .. " failed\n")
+if _failed > 0 then os.exit(1) end
