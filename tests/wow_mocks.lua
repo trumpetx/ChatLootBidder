@@ -127,3 +127,61 @@ function AtlasLootLoaded() return false end
 SlashCmdList = SlashCmdList or {}
 
 -- RANDOM_ROLL_RESULT: set by addon if nil; we leave nil so addon sets it.
+
+function dump_log()
+  local out = ""
+  for _, entry in ipairs(TestChatLog) do
+    out = out .. "[" .. tostring(entry.type) .. "] " .. (entry.dest and ("(" .. entry.dest .. ") ") or "") .. tostring(entry.msg) .. "\n"
+  end
+  return out
+end
+
+function assert_log_contains(text)
+  for _, entry in ipairs(TestChatLog) do
+    if entry.msg and string.find(entry.msg, text, 1, true) then
+      return true
+    end
+  end
+  error("Expected chat to contain: " .. text .. "\n\nActual Log:\n" .. dump_log())
+end
+
+function assert_log_not_contains(text)
+  for _, entry in ipairs(TestChatLog) do
+    if entry.msg and string.find(entry.msg, text, 1, true) then
+      error("Expected chat NOT to contain: " .. text .. "\n\nActual Log:\n" .. dump_log())
+    end
+  end
+end
+
+function ResetWhisperDedup()
+  arg1 = "__reset_" .. GetTime() .. "__"
+  arg2 = "__reset__"
+  ChatFrame_OnEvent("CHAT_MSG_WHISPER")
+end
+
+function SendWhisper(sender, text)
+  arg1 = text
+  arg2 = sender
+  ChatFrame_OnEvent("CHAT_MSG_WHISPER")
+end
+
+function SimulateRoll(player, rollValue)
+  ChatLootBidderFrame.CHAT_MSG_SYSTEM(player .. " rolls " .. rollValue .. " (1-100)")
+end
+
+function SetUpRaidMocks(roster)
+  UnitName = function(unit)
+    if unit == "player" then return "TestPlayer" end
+    local idx = tonumber(string.match(unit, "^raid(%d+)$"))
+    if idx and roster[idx] then return roster[idx].name end
+    return nil
+  end
+  GetNumRaidMembers = function() return #roster end
+  UnitInRaid = function(unit) return 1 end
+  GetRaidRosterInfo = function(index)
+    local p = roster[index]
+    if p then return p.name, p.rank, 1, 1, 1, p.class end
+    return nil
+  end
+  GetLootMethod = function() return "master", 0 end
+end
