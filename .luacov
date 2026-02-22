@@ -1,6 +1,10 @@
 return {
   include = {
     "ChatLootBidder$",
+    "CLB_Util$",
+    "CLB_Messaging$",
+    "CLB_SoftReserve$",
+    "CLB_Bidding$",
     "Options$",
     "VersionUtil$",
     "csv$",

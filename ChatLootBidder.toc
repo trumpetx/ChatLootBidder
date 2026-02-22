@@ -14,8 +14,13 @@ json.lua
 
 i18n.lua
 
+CLB_Util.lua
+CLB_Messaging.lua
+
 Options.xml
 SrEdit.xml
 ChatLootBidder.xml
 
+CLB_SoftReserve.lua
+CLB_Bidding.lua
 ChatLootBidder.lua
