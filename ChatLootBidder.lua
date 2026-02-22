@@ -221,7 +221,7 @@ local function TableContains(table, element)
 end
 
 local function ParseItemNameFromItemLink(i)
-  local _, _ , n = string.find(i, "|h.(.-)]")
+  local _, _ , n = string.find(i, "\124h%[(.-)%]\124h")
   return n
 end
 
@@ -668,7 +668,7 @@ local function GetItemLinks(str)
   local itemLinks = {}
   local _start, _end, _lastEnd = nil, -1, -1
   while true do
-    _start, _end = string.find(str, "|c.-|H.-|h|r", _end + 1)
+    _start, _end = string.find(str, "\124c.-\124H.-\124h.-\124h\124r", _end + 1)
     if _start == nil then
       return itemLinks, _lastEnd
     end
