@@ -1138,7 +1138,7 @@ local function HandleSrAdd(bidder, itemName)
     SendResponse(itemName .. " does not appear to be a valid item name (AtlasLoot).  If this is incorrect, the Loot Master will need to manually input the item name or disable item validation.", bidder)
   else
     if nameFix ~= itemName then
-      SendResponse(itemName .. " fixed to " .. nameFix)
+      SendResponse(itemName .. " fixed to " .. nameFix, bidder)
       itemName = nameFix
     end
     table.insert(sr, itemName)

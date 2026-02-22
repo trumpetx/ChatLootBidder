@@ -133,6 +133,26 @@ test("sr_unload_via_slash_command", function()
   assert_log_contains("There is no Soft Reserve session loaded")
 end)
 
+test("sr_name_fix_whispered_to_bidder", function()
+  SetUpTestEnvironment()
+  ChatLootBidder_Store.ItemValidation = true
+  AtlasLoot_Data = {
+    ["AtlasLootItems"] = {
+      ["TestBoss"] = {
+        { 19019, "INV_Sword", "=q4=Thunderfury, Blessed Blade of the Windseeker", "=ds=", "5%" },
+      }
+    }
+  }
+
+  CLB("sr load testList")
+  ClearChatLog()
+  SendWhisper("PlayerA", "sr thunderfury, blessed blade of the windseeker")
+
+  assert_log_contains("fixed to Thunderfury, Blessed Blade of the Windseeker")
+  assert_log_contains("Your Soft Reserve is currently [ Thunderfury, Blessed Blade of the Windseeker ]")
+  AtlasLoot_Data = nil
+end)
+
 test("sr_max_reserves_exceeded_pushes_oldest", function()
   SetUpTestEnvironment()
 
