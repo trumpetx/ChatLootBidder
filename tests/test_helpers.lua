@@ -12,7 +12,26 @@ DefaultRaidRoster = {
 
 CLB = SlashCmdList["ChatLootBidder"]
 
+function ResetAddonState()
+  CLB("clear")
+  ChatLootBidder_Store = {}
+  this = ChatLootBidderFrame
+  ChatLootBidderFrame.ADDON_LOADED("ChatLootBidder")
+
+  -- Reset module-local SR state (softReserveSessionName + softReservesLocked)
+  -- by loading a temp session, unlocking, then unloading
+  ChatLootBidderFrame:HandleSrLoad("__test_reset__")
+  ChatLootBidderFrame:ToggleSrLock("unlock")
+  ChatLootBidderFrame:HandleSrUnload()
+  ChatLootBidder_Store.SoftReserveSessions = {}
+
+  ResetWhisperDedup()
+  ClearChatLog()
+end
+
 function SetUpTestEnvironment()
+  ResetAddonState()
+
   ChatLootBidder_Store.DefaultSessionMode = "MSOS"
   ChatLootBidder_Store.ShowPlayerClassColors = false
   ChatLootBidder_Store.BreakTies = true
@@ -26,14 +45,4 @@ function SetUpTestEnvironment()
   ChatLootBidder_Store.SoftReserveSessions = {}
 
   SetUpRaidMocks(DefaultRaidRoster)
-
-  -- Reset module-local SR state (softReserveSessionName + softReservesLocked)
-  -- by loading a temp session, unlocking, then unloading
-  ChatLootBidderFrame:HandleSrLoad("__test_reset__")
-  ChatLootBidderFrame:ToggleSrLock("unlock")
-  ChatLootBidderFrame:HandleSrUnload()
-  ChatLootBidder_Store.SoftReserveSessions = {}
-
-  ResetWhisperDedup()
-  ClearChatLog()
 end
