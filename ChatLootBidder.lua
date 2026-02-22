@@ -996,7 +996,7 @@ local InitSlashCommands = function()
       if commandlist[2] == "load" then
         ChatLootBidderFrame:HandleSrLoad(commandlist[3])
       elseif commandlist[2] == "unload" then
-        HandleSrUnload()
+        ChatLootBidderFrame:HandleSrUnload()
       elseif commandlist[2] == "delete" then
         ChatLootBidderFrame:HandleSrDelete(commandlist[3])
       elseif commandlist[2] == "show" then

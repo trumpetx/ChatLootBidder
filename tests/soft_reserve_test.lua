@@ -119,6 +119,20 @@ test("sr_auto_remove_after_win", function()
   assert_log_contains("You are no longer reserving: Thunderfury, Blessed Blade of the Windseeker")
 end)
 
+test("sr_unload_via_slash_command", function()
+  SetUpTestEnvironment()
+
+  CLB("sr load testList")
+  SendWhisper("PlayerA", "sr " .. TestItemLink)
+  ClearChatLog()
+  CLB("sr unload")
+
+  assert_log_contains("Unloaded Soft Reserve session: testList")
+  ResetWhisperDedup()
+  SendWhisper("PlayerA", "sr " .. TestItemLink)
+  assert_log_contains("There is no Soft Reserve session loaded")
+end)
+
 test("sr_max_reserves_exceeded_pushes_oldest", function()
   SetUpTestEnvironment()
 
